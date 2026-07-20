@@ -2,9 +2,9 @@ package com.magik.client;
 
 import com.magik.MagikMod;
 import com.magik.client.hud.RpgHudOverlay;
+import com.magik.client.render.MagicBoltRenderer;
 import com.magik.registry.ModEntities;
 import com.magik.registry.ModItems;
-import net.minecraft.client.renderer.entity.ThrownItemRenderer;
 import net.minecraft.client.renderer.item.ItemProperties;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.BowItem;
@@ -79,7 +79,7 @@ public final class ClientSetup {
 
     @SubscribeEvent
     public static void onRegisterRenderers(EntityRenderersEvent.RegisterRenderers event) {
-        event.registerEntityRenderer(ModEntities.MAGIC_BOLT.get(), ThrownItemRenderer::new);
+        event.registerEntityRenderer(ModEntities.MAGIC_BOLT.get(), MagicBoltRenderer::new);
     }
 
     @SubscribeEvent

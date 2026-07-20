@@ -10,6 +10,7 @@ import com.magik.player.RpgAttribute;
 import com.magik.player.RpgStats;
 import com.magik.progression.RpgXp;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
@@ -95,29 +96,33 @@ public final class SkillCasting {
             case SkillTrees.ARCANE_EXPLOSION -> castArcaneExplosion(player, rpg);
             case SkillTrees.HEAL -> castHeal(player, rpg);
             case SkillTrees.ARCANE_SHIELD -> castAbsorption(player, 1, 400,
-                    ParticleTypes.ENCHANT, SoundEvents.ILLUSIONER_CAST_SPELL);
+                    SkillFx.ARCANE_A, SkillFx.ARCANE_B, SoundEvents.ILLUSIONER_CAST_SPELL);
             case SkillTrees.SHORT_TELEPORT -> castTeleport(player);
             case SkillTrees.WEAPON_SUMMON -> castWeaponSummon(player, gameTime);
 
             // --- Espadachim ---
             case SkillTrees.SWORD_COMBO -> {
                 rpg.startCombo(gameTime + 160);
-                feedback(player, ParticleTypes.SWEEP_ATTACK, 4, SoundEvents.PLAYER_ATTACK_SWEEP, 1.2F);
+                SkillFx.slashArc(level(player), player, 1.6D, SkillFx.SWORD_A, SkillFx.SWORD_B);
+                playSound(player, SoundEvents.PLAYER_ATTACK_SWEEP, 1.2F);
                 yield true;
             }
             case SkillTrees.SPIN_SLASH -> castAoeMelee(player, rpg, 3.5D, 5.0F, 0.4F,
-                    ParticleTypes.SWEEP_ATTACK, SoundEvents.PLAYER_ATTACK_SWEEP, false);
+                    SkillFx.SWORD_A, SkillFx.SWORD_B, SoundEvents.PLAYER_ATTACK_SWEEP, false);
             case SkillTrees.CHARGED_STRIKE -> {
                 rpg.setChargedStrikeUntil(gameTime + 100);
-                feedback(player, ParticleTypes.ANGRY_VILLAGER, 6, SoundEvents.EXPERIENCE_ORB_PICKUP, 0.6F);
+                SkillFx.charge(level(player), player, SkillFx.GOLD);
+                playSound(player, SoundEvents.EXPERIENCE_ORB_PICKUP, 0.6F);
                 yield true;
             }
             case SkillTrees.AREA_SLASH -> castCone(player, rpg, 4.5D, 7.0F,
-                    ParticleTypes.SWEEP_ATTACK, SoundEvents.PLAYER_ATTACK_SWEEP);
+                    SkillFx.SWORD_A, SkillFx.SWORD_B, SoundEvents.PLAYER_ATTACK_SWEEP);
             case SkillTrees.DASH -> castDash(player, rpg);
             case SkillTrees.COUNTER_ATTACK -> {
                 rpg.setParryUntil(gameTime + 30);
-                feedback(player, ParticleTypes.ENCHANTED_HIT, 8, SoundEvents.SHIELD_BLOCK, 1.5F);
+                SkillFx.ring(level(player), player.position().add(0.0D, 1.0D, 0.0D), 0.9D,
+                        SkillFx.DEFENSE_B, SkillFx.SWORD_B, 1.1F, 0.15D);
+                playSound(player, SoundEvents.SHIELD_BLOCK, 1.5F);
                 yield true;
             }
 
@@ -129,16 +134,16 @@ public final class SkillCasting {
 
             // --- Armamento Pesado ---
             case SkillTrees.GIANT_CLEAVE -> castCone(player, rpg, 4.0D, 9.0F,
-                    ParticleTypes.CRIT, SoundEvents.PLAYER_ATTACK_STRONG);
+                    SkillFx.HEAVY_A, SkillFx.HEAVY_B, SoundEvents.PLAYER_ATTACK_STRONG);
             case SkillTrees.HAMMER_SLAM -> castHammerSlam(player, rpg);
             case SkillTrees.AREA_STRIKE -> castAoeMelee(player, rpg, 3.5D, 6.0F, 0.9F,
-                    ParticleTypes.EXPLOSION, SoundEvents.GENERIC_EXPLODE, false);
+                    SkillFx.HEAVY_A, SkillFx.HEAVY_B, SoundEvents.GENERIC_EXPLODE, false);
             case SkillTrees.TOTAL_DESTRUCTION -> castAoeMelee(player, rpg, 5.0D, 14.0F, 1.2F,
-                    ParticleTypes.EXPLOSION_EMITTER, SoundEvents.GENERIC_EXPLODE, true);
+                    SkillFx.HEAVY_A, SkillFx.HEAVY_B, SoundEvents.GENERIC_EXPLODE, true);
 
             // --- Defesa ---
             case SkillTrees.PROTECTIVE_SHIELD -> castAbsorption(player, 2, 600,
-                    ParticleTypes.COMPOSTER, SoundEvents.BEACON_ACTIVATE);
+                    SkillFx.DEFENSE_A, SkillFx.DEFENSE_B, SoundEvents.BEACON_ACTIVATE);
 
             default -> false;
         };
@@ -154,6 +159,12 @@ public final class SkillCasting {
         MagicBoltEntity bolt = new MagicBoltEntity(player.level(), player, damage, variant);
         bolt.shootFromRotation(player, player.getXRot(), player.getYRot(), 0.0F, 1.6F, 0.5F);
         player.level().addFreshEntity(bolt);
+        // Muzzle flash in the element's colors at the cast point.
+        Vec3 muzzle = player.getEyePosition().add(player.getLookAngle().scale(1.0D));
+        level(player).sendParticles(new DustParticleOptions(variant.primary, 1.3F),
+                muzzle.x, muzzle.y, muzzle.z, 8, 0.12D, 0.12D, 0.12D, 0.05D);
+        level(player).sendParticles(new DustParticleOptions(variant.secondary, 1.0F),
+                muzzle.x, muzzle.y, muzzle.z, 6, 0.2D, 0.2D, 0.2D, 0.08D);
         playSound(player, sound, pitch);
         return true;
     }
@@ -184,8 +195,11 @@ public final class SkillCasting {
                 new AABB(player.blockPosition()).inflate(5.0D), hostileTo(player))) {
             target.hurt(player.damageSources().indirectMagic(player, player), damage);
         }
+        SkillFx.shockwave(level, player.position(), 5.0D, SkillFx.ARCANE_A, SkillFx.ARCANE_B);
         level.sendParticles(ParticleTypes.DRAGON_BREATH,
-                player.getX(), player.getY(0.5D), player.getZ(), 120, 3.0D, 0.8D, 3.0D, 0.1D);
+                player.getX(), player.getY(0.5D), player.getZ(), 80, 3.0D, 0.8D, 3.0D, 0.1D);
+        level.sendParticles(ParticleTypes.FLASH,
+                player.getX(), player.getY(1.0D), player.getZ(), 1, 0.0D, 0.0D, 0.0D, 0.0D);
         playSound(player, SoundEvents.DRAGON_FIREBALL_EXPLODE, 1.2F);
         return true;
     }
@@ -197,14 +211,19 @@ public final class SkillCasting {
         float healing = 4.0F + 0.25F * rpg.getAttribute(RpgAttribute.INTELLIGENCE);
         player.heal(healing);
         player.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 100, 0));
-        feedback(player, ParticleTypes.HEART, 8, SoundEvents.PLAYER_LEVELUP, 1.6F);
+        SkillFx.helix(level(player), player, SkillFx.HEAL_GREEN, SkillFx.GOLD);
+        feedback(player, ParticleTypes.HEART, 4, SoundEvents.PLAYER_LEVELUP, 1.6F);
         return true;
     }
 
     private static boolean castAbsorption(ServerPlayer player, int amplifier, int duration,
-                                          ParticleOptions particle, SoundEvent sound) {
+                                          org.joml.Vector3f colorA, org.joml.Vector3f colorB,
+                                          SoundEvent sound) {
         player.addEffect(new MobEffectInstance(MobEffects.ABSORPTION, duration, amplifier));
-        feedback(player, particle, 30, sound, 1.2F);
+        SkillFx.helix(level(player), player, colorA, colorB);
+        SkillFx.ring(level(player), player.position().add(0.0D, 0.1D, 0.0D), 1.4D,
+                colorA, colorB, 1.2F, 0.1D);
+        playSound(player, sound, 1.2F);
         return true;
     }
 
@@ -229,7 +248,9 @@ public final class SkillCasting {
     /** Summons spectral blades that strike nearby enemies for a while (aura). */
     private static boolean castWeaponSummon(ServerPlayer player, long gameTime) {
         PlayerRpgProvider.get(player).ifPresent(rpg -> rpg.setWeaponSummonUntil(gameTime + 300));
-        feedback(player, ParticleTypes.END_ROD, 40, SoundEvents.EVOKER_CAST_SPELL, 0.9F);
+        SkillFx.ring(level(player), player.position().add(0.0D, 1.2D, 0.0D), 1.6D,
+                SkillFx.ARCANE_A, SkillFx.SWORD_B, 1.2F, 0.1D);
+        feedback(player, ParticleTypes.END_ROD, 25, SoundEvents.EVOKER_CAST_SPELL, 0.9F);
         return true;
     }
 
@@ -255,10 +276,10 @@ public final class SkillCasting {
     // Espadachim / Armamento Pesado
     // ------------------------------------------------------------------
 
-    /** 360-degree melee burst around the player. */
+    /** 360-degree melee burst around the player with a colored shockwave. */
     private static boolean castAoeMelee(ServerPlayer player, PlayerRpg rpg, double radius, float baseDamage,
-                                        float knockback, ParticleOptions particle, SoundEvent sound,
-                                        boolean heavyScaling) {
+                                        float knockback, org.joml.Vector3f colorA, org.joml.Vector3f colorB,
+                                        SoundEvent sound, boolean heavyScaling) {
         float damage = baseDamage * RpgStats.meleeDamageMultiplier(rpg);
         if (heavyScaling) {
             damage *= 1.0F + RpgStats.heavyWeaponBonus(rpg);
@@ -273,15 +294,18 @@ public final class SkillCasting {
                 target.push(push.x, push.y, push.z);
             }
         }
-        level.sendParticles(particle,
-                player.getX(), player.getY(0.9D), player.getZ(), 8, radius * 0.5D, 0.3D, radius * 0.5D, 0.0D);
+        SkillFx.shockwave(level, player.position(), radius, colorA, colorB);
+        if (heavyScaling) {
+            level.sendParticles(ParticleTypes.EXPLOSION,
+                    player.getX(), player.getY(0.5D), player.getZ(), 3, radius * 0.4D, 0.3D, radius * 0.4D, 0.0D);
+        }
         playSound(player, sound, 0.9F);
         return true;
     }
 
-    /** Frontal cone strike (Area Slash / Giant Cleave). */
+    /** Frontal cone strike (Area Slash / Giant Cleave) with a crescent slash arc. */
     private static boolean castCone(ServerPlayer player, PlayerRpg rpg, double range, float baseDamage,
-                                    ParticleOptions particle, SoundEvent sound) {
+                                    org.joml.Vector3f colorA, org.joml.Vector3f colorB, SoundEvent sound) {
         float damage = baseDamage * RpgStats.meleeDamageMultiplier(rpg)
                 * (1.0F + RpgStats.heavyWeaponBonus(rpg) * 0.5F);
         Vec3 look = player.getLookAngle();
@@ -293,8 +317,7 @@ public final class SkillCasting {
                 target.hurt(player.damageSources().playerAttack(player), damage);
             }
         }
-        Vec3 front = player.position().add(look.scale(2.0D));
-        level.sendParticles(particle, front.x, front.y + 1.0D, front.z, 6, 1.2D, 0.4D, 1.2D, 0.0D);
+        SkillFx.slashArc(level, player, range * 0.55D, colorA, colorB);
         playSound(player, sound, 0.8F);
         return true;
     }
@@ -307,8 +330,11 @@ public final class SkillCasting {
             target.hurt(player.damageSources().playerAttack(player), damage);
             CombatEvents.stun(target, 50);
         }
+        SkillFx.shockwave(level, player.position(), 4.0D, SkillFx.HEAVY_A, SkillFx.HEAVY_B);
         level.sendParticles(ParticleTypes.EXPLOSION,
-                player.getX(), player.getY(), player.getZ(), 5, 1.5D, 0.2D, 1.5D, 0.0D);
+                player.getX(), player.getY(), player.getZ(), 3, 1.2D, 0.2D, 1.2D, 0.0D);
+        level.sendParticles(ParticleTypes.CAMPFIRE_COSY_SMOKE,
+                player.getX(), player.getY(0.2D), player.getZ(), 8, 1.5D, 0.1D, 1.5D, 0.01D);
         playSound(player, SoundEvents.ANVIL_LAND, 0.6F);
         return true;
     }
@@ -319,7 +345,15 @@ public final class SkillCasting {
         Vec3 dash = new Vec3(look.x, 0.0D, look.z).normalize().scale(1.6D).add(0.0D, 0.25D, 0.0D);
         player.setDeltaMovement(dash);
         player.hurtMarked = true; // Forces the velocity packet to the client.
-        feedback(player, ParticleTypes.CLOUD, 12, SoundEvents.ENDER_DRAGON_FLAP, 1.5F);
+        // A trail of silver-red afterimage dust left along the launch direction.
+        ServerLevel level = level(player);
+        for (int i = 0; i < 8; i++) {
+            Vec3 behind = player.position().subtract(dash.normalize().scale(i * 0.35D));
+            level.sendParticles(new DustParticleOptions(
+                            i % 2 == 0 ? SkillFx.SWORD_B : SkillFx.SWORD_A, 1.0F),
+                    behind.x, behind.y + 0.6D, behind.z, 1, 0.05D, 0.05D, 0.05D, 0.0D);
+        }
+        feedback(player, ParticleTypes.CLOUD, 6, SoundEvents.ENDER_DRAGON_FLAP, 1.5F);
         return true;
     }
 
@@ -331,7 +365,8 @@ public final class SkillCasting {
     private static boolean armArrow(ServerPlayer player, PlayerRpg rpg,
                                     PlayerRpg.ArrowEffect effect, long gameTime) {
         rpg.setNextArrowEffect(effect, gameTime + 200);
-        feedback(player, ParticleTypes.ENCHANT, 12, SoundEvents.ARROW_HIT_PLAYER, 0.8F);
+        SkillFx.charge(level(player), player, SkillFx.ARCHER_A);
+        playSound(player, SoundEvents.ARROW_HIT_PLAYER, 0.8F);
         return true;
     }
 
@@ -344,6 +379,7 @@ public final class SkillCasting {
             arrow.shootFromRotation(player, player.getXRot(), player.getYRot() + i * 8.0F, 0.0F, 2.8F, 1.0F);
             player.level().addFreshEntity(arrow);
         }
+        SkillFx.slashArc(level(player), player, 1.2D, SkillFx.ARCHER_A, SkillFx.ARCHER_B);
         playSound(player, SoundEvents.ARROW_SHOOT, 0.9F);
         return true;
     }
@@ -351,6 +387,10 @@ public final class SkillCasting {
     // ------------------------------------------------------------------
     // Helpers
     // ------------------------------------------------------------------
+
+    private static ServerLevel level(ServerPlayer player) {
+        return (ServerLevel) player.level();
+    }
 
     private static Predicate<LivingEntity> hostileTo(ServerPlayer player) {
         return entity -> entity != player && entity.isAlive()
