@@ -1,0 +1,6 @@
+{
+  "parent": "magik:item/staff_3d",
+  "textures": {
+    "base": "magik:item/staff_rod_fire_staff"
+  }
+}

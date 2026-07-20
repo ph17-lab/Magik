@@ -1,0 +1,14 @@
+{
+  "parent": "magik:item/shield_base",
+  "textures": {
+    "base": "magik:item/obsidian_shield"
+  },
+  "overrides": [
+    {
+      "predicate": {
+        "blocking": 1
+      },
+      "model": "magik:item/obsidian_shield_blocking"
+    }
+  ]
+}

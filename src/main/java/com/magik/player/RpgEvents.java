@@ -1,0 +1,155 @@
+package com.magik.player;
+
+import com.magik.MagikMod;
+import com.magik.combat.RpgAttributeApplier;
+import com.magik.item.RpgGear;
+import com.magik.network.MagikNetwork;
+import com.magik.skills.SkillCasting;
+import com.magik.skills.SkillTrees;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraftforge.common.capabilities.RegisterCapabilitiesEvent;
+import net.minecraftforge.event.AttachCapabilitiesEvent;
+import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.event.entity.player.PlayerEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
+
+/**
+ * Lifecycle management for the {@link PlayerRpg} capability:
+ * attachment, death persistence, login/respawn synchronization and the
+ * per-tick mana/stamina regeneration loop.
+ */
+@Mod.EventBusSubscriber(modid = MagikMod.MOD_ID)
+public final class RpgEvents {
+
+    /** How often (in ticks) changed vitals are pushed to the client. */
+    private static final int VITALS_SYNC_INTERVAL = 10;
+
+    private RpgEvents() {
+    }
+
+    @Mod.EventBusSubscriber(modid = MagikMod.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD)
+    public static final class ModBus {
+        @SubscribeEvent
+        public static void onRegisterCapabilities(RegisterCapabilitiesEvent event) {
+            event.register(PlayerRpg.class);
+        }
+    }
+
+    @SubscribeEvent
+    public static void onAttachCapabilities(AttachCapabilitiesEvent<Entity> event) {
+        if (event.getObject() instanceof Player) {
+            event.addCapability(MagikMod.id("rpg"), new PlayerRpgProvider());
+        }
+    }
+
+    /** Keeps all RPG progress across death and returning from the End. */
+    @SubscribeEvent
+    public static void onPlayerClone(PlayerEvent.Clone event) {
+        event.getOriginal().reviveCaps();
+        PlayerRpgProvider.get(event.getOriginal()).ifPresent(oldData ->
+                PlayerRpgProvider.get(event.getEntity()).ifPresent(newData -> {
+                    newData.copyFrom(oldData);
+                    if (event.isWasDeath()) {
+                        // Respawn with full pools and no lingering cooldowns.
+                        newData.setMana(RpgStats.maxMana(newData, event.getEntity()));
+                        newData.setStamina(RpgStats.maxStamina(newData));
+                        newData.getCooldowns().clear();
+                    }
+                }));
+        event.getOriginal().invalidateCaps();
+    }
+
+    @SubscribeEvent
+    public static void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
+        syncAndApply(event.getEntity());
+    }
+
+    @SubscribeEvent
+    public static void onPlayerRespawn(PlayerEvent.PlayerRespawnEvent event) {
+        syncAndApply(event.getEntity());
+    }
+
+    @SubscribeEvent
+    public static void onPlayerChangedDimension(PlayerEvent.PlayerChangedDimensionEvent event) {
+        syncAndApply(event.getEntity());
+    }
+
+    private static void syncAndApply(Player player) {
+        if (player instanceof ServerPlayer serverPlayer) {
+            PlayerRpgProvider.get(serverPlayer).ifPresent(rpg -> {
+                RpgAttributeApplier.apply(serverPlayer, rpg);
+                MagikNetwork.syncFull(serverPlayer, rpg);
+            });
+        }
+    }
+
+    /** Server-side regeneration and passive/aura ticking. */
+    @SubscribeEvent
+    public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
+        if (event.phase != TickEvent.Phase.END || !(event.player instanceof ServerPlayer player)) {
+            return;
+        }
+        PlayerRpgProvider.get(player).ifPresent(rpg -> {
+            long gameTime = player.level().getGameTime();
+
+            float maxMana = RpgStats.maxMana(rpg, player);
+            if (rpg.getMana() < maxMana) {
+                rpg.setMana(Math.min(maxMana, rpg.getMana() + RpgStats.manaRegenPerTick(rpg)));
+            } else if (rpg.getMana() > maxMana) {
+                rpg.setMana(maxMana);
+            }
+
+            float maxStamina = RpgStats.maxStamina(rpg);
+            if (rpg.getStamina() < maxStamina
+                    && gameTime - rpg.getLastStaminaUse() >= RpgStats.STAMINA_REGEN_DELAY_TICKS) {
+                rpg.setStamina(Math.min(maxStamina, rpg.getStamina() + RpgStats.staminaRegenPerTick(rpg)));
+            } else if (rpg.getStamina() > maxStamina) {
+                rpg.setStamina(maxStamina);
+            }
+
+            // Regeneration passive: slow healing while out of combat.
+            if (rpg.hasSkill(SkillTrees.REGENERATION)
+                    && player.getHealth() < player.getMaxHealth()
+                    && gameTime - rpg.getLastCombatTime() >= RpgStats.OUT_OF_COMBAT_TICKS
+                    && gameTime % 40 == 0) {
+                player.heal(1.0F);
+            }
+
+            // Summoned spectral weapons aura (Invocação de Armas).
+            if (gameTime < rpg.getWeaponSummonUntil() && gameTime % 20 == 0) {
+                SkillCasting.tickWeaponSummon(player, rpg);
+            }
+
+            // Unequip armor whose level/attribute requirements are not met.
+            if (gameTime % 40 == 0) {
+                RpgGear.enforceArmorRequirements(player, rpg);
+            }
+
+            if (gameTime % VITALS_SYNC_INTERVAL == 0) {
+                MagikNetwork.syncVitals(player, rpg);
+            }
+        });
+    }
+
+    /** Restores mana from consumables; clamped to the player's maximum. */
+    public static void restoreMana(Player player, float amount) {
+        PlayerRpgProvider.get(player).ifPresent(rpg ->
+                rpg.setMana(Mth.clamp(rpg.getMana() + amount, 0.0F, RpgStats.maxMana(rpg, player))));
+        if (player instanceof ServerPlayer serverPlayer) {
+            PlayerRpgProvider.get(serverPlayer).ifPresent(rpg -> MagikNetwork.syncVitals(serverPlayer, rpg));
+        }
+    }
+
+    /** Restores stamina from consumables; clamped to the player's maximum. */
+    public static void restoreStamina(Player player, float amount) {
+        PlayerRpgProvider.get(player).ifPresent(rpg ->
+                rpg.setStamina(Mth.clamp(rpg.getStamina() + amount, 0.0F, RpgStats.maxStamina(rpg))));
+        if (player instanceof ServerPlayer serverPlayer) {
+            PlayerRpgProvider.get(serverPlayer).ifPresent(rpg -> MagikNetwork.syncVitals(serverPlayer, rpg));
+        }
+    }
+}

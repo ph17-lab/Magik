@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "C C",
+    "C C"
+  ],
+  "key": {
+    "C": {
+      "item": "magik:mana_crystal"
+    }
+  },
+  "result": {
+    "item": "magik:arcanite_boots",
+    "count": 1
+  }
+}

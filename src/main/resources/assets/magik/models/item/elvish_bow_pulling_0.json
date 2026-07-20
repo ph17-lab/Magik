@@ -1,0 +1,6 @@
+{
+  "parent": "magik:item/elvish_bow",
+  "textures": {
+    "layer0": "magik:item/elvish_bow_pulling_0"
+  }
+}

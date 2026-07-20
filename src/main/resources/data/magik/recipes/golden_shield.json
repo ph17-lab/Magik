@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "PMP",
+    "MMM",
+    " P "
+  ],
+  "key": {
+    "P": {
+      "item": "minecraft:oak_planks"
+    },
+    "M": {
+      "item": "minecraft:gold_ingot"
+    }
+  },
+  "result": {
+    "item": "magik:golden_shield",
+    "count": 1
+  }
+}

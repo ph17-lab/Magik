@@ -1,0 +1,6 @@
+{
+  "parent": "magik:item/legendary_bow",
+  "textures": {
+    "layer0": "magik:item/legendary_bow_pulling_0"
+  }
+}
