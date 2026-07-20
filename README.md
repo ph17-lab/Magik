@@ -14,7 +14,7 @@ Um mod RPG completo, moderno e otimizado para **Minecraft Java Edition 1.20.1 + 
 | **Stamina** | Barra própria, regeneração com atraso, usada por dash e golpes |
 | **5 Árvores** | Arcano, Espadachim, Arqueiro, Armamento Pesado, Defesa — 40 habilidades |
 | **Classes livres** | Sem classe fixa; títulos por progressão (Aprendiz → Lenda) |
-| **Arsenal** | 3 espadas, 3 armas pesadas, 6 arcos, 6 escudos 3D, 6 cajados 3D, armadura Arcanita |
+| **Arsenal** | 3 espadas, 3 armas pesadas, 6 arcos, 6 escudos 3D, cajado 3D (modelo Blockbench próprio), armadura Arcanita |
 | **Raridades** | Comum → Incomum → Raro → Épico → **Lendário** → **Mítico** |
 | **Requisitos** | Nível e atributos mínimos por equipamento (tooltip colorido) |
 | **HUD** | Vida/Mana/Stamina, nível+título, XP animado, 4 slots de habilidade com cooldown |
@@ -44,6 +44,7 @@ Requer Java 17. O primeiro build baixa e decompila o Minecraft (demora alguns mi
 - `config/magik-client.toml` — posições e visibilidade de cada elemento da HUD.
 - `config/magik/balance.json` — **JSON de balanceamento**: custo de mana/stamina, cooldown e nível mínimo de cada habilidade + multiplicadores globais de XP e regeneração. Gerado completo no primeiro launch; aplicado no servidor (não trapaceável pelo cliente).
 - `/magikrpg xp <n> | level <n> | reset` — comandos de administração (permissão 2).
+- `/fullxp` — nível máximo, todas as 40 habilidades desbloqueadas e atributos masterizados (para testes; permissão 2).
 
 ## Arquitetura
 

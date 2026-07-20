@@ -35,7 +35,7 @@ import static com.magik.player.RpgAttribute.STRENGTH;
  *   <li><b>Axes/Hammers</b> - heavy weapons for the Armamento Pesado tree.</li>
  *   <li><b>Bows</b> - six tiers with distinct draw speed/velocity/damage.</li>
  *   <li><b>Shields</b> - six tiers with armor bonuses and blocking perks.</li>
- *   <li><b>Staves</b> - six elements consuming mana, scaling with Intelligence.</li>
+ *   <li><b>Staff</b> - consumes mana, scaling with Intelligence.</li>
  *   <li><b>Arcanite armor</b> - caster set with a full-set mana bonus.</li>
  * </ul>
  *
@@ -165,38 +165,14 @@ public final class ModItems {
                     new Item.Properties().durability(2048).rarity(ModRarities.LEGENDARY)));
 
     // ------------------------------------------------------------------
-    // Staves (element, damage, mana cost, cast cooldown)
+    // Staff (element, damage, mana cost, cast cooldown)
     // ------------------------------------------------------------------
 
-    public static final RegistryObject<Item> ARCANE_STAFF = ITEMS.register("arcane_staff",
-            () -> new StaffItem(MagicBoltEntity.Variant.ARCANE, 5.0F, 10.0F, 12,
-                    ItemRequirements.level(5),
-                    new Item.Properties().durability(300).rarity(Rarity.UNCOMMON)));
-
-    public static final RegistryObject<Item> FIRE_STAFF = ITEMS.register("fire_staff",
-            () -> new StaffItem(MagicBoltEntity.Variant.FIRE, 6.0F, 12.0F, 14,
-                    ItemRequirements.of(10, INTELLIGENCE, 5),
-                    new Item.Properties().durability(384).rarity(Rarity.UNCOMMON)));
-
-    public static final RegistryObject<Item> ICE_STAFF = ITEMS.register("ice_staff",
-            () -> new StaffItem(MagicBoltEntity.Variant.FROST, 5.0F, 12.0F, 14,
-                    ItemRequirements.of(10, INTELLIGENCE, 5),
-                    new Item.Properties().durability(384).rarity(Rarity.UNCOMMON)));
-
-    public static final RegistryObject<Item> LIGHTNING_STAFF = ITEMS.register("lightning_staff",
-            () -> new StaffItem(MagicBoltEntity.Variant.ELECTRIC, 7.0F, 18.0F, 20,
-                    ItemRequirements.of(25, INTELLIGENCE, 12),
+    /** The caster's staff: fires arcane bolts, damage scales with Intelligence. */
+    public static final RegistryObject<Item> STAFF = ITEMS.register("staff",
+            () -> new StaffItem(MagicBoltEntity.Variant.ARCANE, 6.0F, 12.0F, 14,
+                    ItemRequirements.of(5, INTELLIGENCE, 3),
                     new Item.Properties().durability(512).rarity(Rarity.RARE)));
-
-    public static final RegistryObject<Item> HOLY_STAFF = ITEMS.register("holy_staff",
-            () -> new StaffItem(MagicBoltEntity.Variant.HOLY, 6.0F, 15.0F, 16,
-                    ItemRequirements.of(35, INTELLIGENCE, 18),
-                    new Item.Properties().durability(640).rarity(Rarity.EPIC)));
-
-    public static final RegistryObject<Item> SUPREME_STAFF = ITEMS.register("supreme_staff",
-            () -> new StaffItem(MagicBoltEntity.Variant.SUPREME, 10.0F, 20.0F, 10,
-                    ItemRequirements.of(55, INTELLIGENCE, 30),
-                    new Item.Properties().durability(1200).rarity(ModRarities.MYTHIC)));
 
     // ------------------------------------------------------------------
     // Arcanite armor set (full set: +max mana)

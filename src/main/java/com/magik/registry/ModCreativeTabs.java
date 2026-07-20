@@ -17,7 +17,7 @@ public final class ModCreativeTabs {
     public static final RegistryObject<CreativeModeTab> MAGIK_TAB = TABS.register("magik",
             () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.magik"))
-                    .icon(() -> new ItemStack(ModItems.SUPREME_STAFF.get()))
+                    .icon(() -> new ItemStack(ModItems.STAFF.get()))
                     .displayItems((parameters, output) -> {
                         // Swords
                         output.accept(ModItems.SWIFT_BLADE.get());
@@ -41,13 +41,8 @@ public final class ModCreativeTabs {
                         output.accept(ModItems.DIAMOND_SHIELD.get());
                         output.accept(ModItems.OBSIDIAN_SHIELD.get());
                         output.accept(ModItems.LEGENDARY_SHIELD.get());
-                        // Staves
-                        output.accept(ModItems.ARCANE_STAFF.get());
-                        output.accept(ModItems.FIRE_STAFF.get());
-                        output.accept(ModItems.ICE_STAFF.get());
-                        output.accept(ModItems.LIGHTNING_STAFF.get());
-                        output.accept(ModItems.HOLY_STAFF.get());
-                        output.accept(ModItems.SUPREME_STAFF.get());
+                        // Staff
+                        output.accept(ModItems.STAFF.get());
                         // Armor
                         output.accept(ModItems.ARCANITE_HELMET.get());
                         output.accept(ModItems.ARCANITE_CHESTPLATE.get());

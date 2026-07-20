@@ -1,22 +1,18 @@
 {
   "itemGroup.magik": "Magik RPG",
-
   "item.magik.mana_crystal": "Mana Crystal",
   "item.magik.mana_potion": "Mana Potion",
   "item.magik.stamina_draught": "Stamina Draught",
-
   "item.magik.swift_blade": "Swift Blade",
   "item.magik.swift_blade.tooltip": "A feather-light dueling blade. Strikes like lightning.",
   "item.magik.knight_sword": "Knight Sword",
   "item.magik.knight_sword.tooltip": "The trusted blade of royal knights.",
   "item.magik.crystal_blade": "Crystal Blade",
   "item.magik.crystal_blade.tooltip": "A crystalline edge that finds every weak spot.",
-
   "item.magik.warhammer": "Warhammer",
   "item.magik.battle_axe": "Battle Axe",
   "item.magik.giant_axe": "Giant Axe",
   "item.magik.heavy_weapon.tooltip": "Heavy weapon: slow, brutal, scales with Strength.",
-
   "item.magik.short_bow": "Short Bow",
   "item.magik.short_bow.tooltip": "Light and quick to draw.",
   "item.magik.long_bow": "Long Bow",
@@ -29,7 +25,6 @@
   "item.magik.arcane_bow.tooltip": "Channels mana into every shot.",
   "item.magik.legendary_bow": "Legendary Bow",
   "item.magik.legendary_bow.tooltip": "A relic of forgotten master archers.",
-
   "item.magik.wooden_shield": "Wooden Shield",
   "item.magik.wooden_shield.tooltip": "Simple, but better than nothing.",
   "item.magik.iron_shield": "Iron Shield",
@@ -42,35 +37,20 @@
   "item.magik.obsidian_shield.tooltip": "Grants Fire Resistance while blocking.",
   "item.magik.legendary_shield": "Legendary Shield",
   "item.magik.legendary_shield.tooltip": "An unbreakable bulwark: grants Resistance while blocking.",
-
-  "item.magik.arcane_staff": "Arcane Staff",
-  "item.magik.arcane_staff.tooltip": "Fires arcane bolts. Damage scales with Intelligence.",
-  "item.magik.fire_staff": "Fire Staff",
-  "item.magik.fire_staff.tooltip": "Hurls fire bolts that ignite enemies.",
-  "item.magik.ice_staff": "Ice Staff",
-  "item.magik.ice_staff.tooltip": "Frost bolts that slow enemies.",
-  "item.magik.lightning_staff": "Lightning Staff",
-  "item.magik.lightning_staff.tooltip": "Sparks chain to nearby enemies.",
-  "item.magik.holy_staff": "Holy Staff",
-  "item.magik.holy_staff.tooltip": "Light bolts that heal you on hit.",
-  "item.magik.supreme_staff": "Supreme Staff",
-  "item.magik.supreme_staff.tooltip": "The apex of staffcraft: burns, freezes and devastates.",
-
+  "item.magik.staff": "Staff",
+  "item.magik.staff.tooltip": "Fires arcane bolts. Damage scales with Intelligence.",
   "item.magik.arcanite_helmet": "Arcanite Helmet",
   "item.magik.arcanite_chestplate": "Arcanite Chestplate",
   "item.magik.arcanite_leggings": "Arcanite Leggings",
   "item.magik.arcanite_boots": "Arcanite Boots",
   "item.magik.arcanite_armor.tooltip": "Full set: +%s max Mana.",
-
   "tooltip.magik.requires_level": "Requires level %s",
   "tooltip.magik.requires_attribute": "Requires %s %s",
   "tooltip.magik.crit_bonus": "+%s%% critical chance",
   "tooltip.magik.block_power": "Block power: -%s damage",
   "tooltip.magik.bow_stats": "Draw: %ss | Velocity: %s%% | Damage: +%s%%",
   "tooltip.magik.staff_stats": "Magic damage: %s | Mana: %s | Cast: %ss",
-
   "entity.magik.magic_bolt": "Magic Bolt",
-
   "attribute.magik.vitality": "Vitality",
   "attribute.magik.vitality.desc": "+2 max health per point.",
   "attribute.magik.strength": "Strength",
@@ -85,13 +65,11 @@
   "attribute.magik.intelligence.desc": "+max mana, +magic damage, cheaper and faster spells.",
   "attribute.magik.mining": "Mining Speed",
   "attribute.magik.mining.desc": "+4% block breaking speed per point.",
-
   "skilltree.magik.arcane": "Arcane",
   "skilltree.magik.swordsman": "Swordsman",
   "skilltree.magik.archer": "Archer",
   "skilltree.magik.heavy": "Heavy Weapons",
   "skilltree.magik.defense": "Defense",
-
   "skill.magik.fireball": "Fireball",
   "skill.magik.fireball.desc": "Launches a fireball that ignites the target.",
   "skill.magik.lightning": "Lightning",
@@ -108,7 +86,6 @@
   "skill.magik.short_teleport.desc": "Teleports a short distance in the direction you are looking.",
   "skill.magik.weapon_summon": "Weapon Summon",
   "skill.magik.weapon_summon.desc": "Summons spectral blades that strike nearby enemies for 15s.",
-
   "skill.magik.sword_combo": "Sword Combo",
   "skill.magik.sword_combo.desc": "For 8s, every hit of the sequence deals increasing damage.",
   "skill.magik.spin_slash": "Spin Slash",
@@ -125,7 +102,6 @@
   "skill.magik.sword_crit.desc": "+10% critical chance with swords.",
   "skill.magik.sword_master": "Sword Master",
   "skill.magik.sword_master.desc": "+10% sword damage and attack speed.",
-
   "skill.magik.zoom": "Zoom",
   "skill.magik.zoom.desc": "The camera zooms while drawing a bow; +10% ranged damage.",
   "skill.magik.explosive_arrow": "Explosive Arrow",
@@ -142,7 +118,6 @@
   "skill.magik.rapid_fire.desc": "Magik bows draw 35% faster.",
   "skill.magik.bow_crit": "Improved Critical",
   "skill.magik.bow_crit.desc": "+10% critical chance with bows.",
-
   "skill.magik.giant_cleave": "Giant Cleave",
   "skill.magik.giant_cleave.desc": "A colossal frontal blow with massive area damage.",
   "skill.magik.hammer_slam": "War Hammer",
@@ -159,7 +134,6 @@
   "skill.magik.brutal_force.desc": "+15% damage with all heavy weapon attacks.",
   "skill.magik.total_destruction": "Total Destruction",
   "skill.magik.total_destruction.desc": "An earth-shattering blow of colossal area damage.",
-
   "skill.magik.reinforced_life": "Reinforced Life",
   "skill.magik.reinforced_life.desc": "Permanently +4 max health.",
   "skill.magik.damage_reduction": "Damage Reduction",
@@ -176,7 +150,6 @@
   "skill.magik.protective_shield.desc": "A protective barrier that absorbs damage for 30s.",
   "skill.magik.unbreakable_fortress": "Unbreakable Fortress",
   "skill.magik.unbreakable_fortress.desc": "+30% resistance to negative effects and knockback.",
-
   "title.magik.apprentice": "Apprentice",
   "title.magik.warrior": "Warrior",
   "title.magik.knight": "Knight",
@@ -185,7 +158,6 @@
   "title.magik.master_archer": "Master Archer",
   "title.magik.guardian": "Guardian",
   "title.magik.legend": "Legend",
-
   "screen.magik.character": "Character",
   "screen.magik.skills": "Skill Trees",
   "screen.magik.skills_tab": "Skills",
@@ -206,12 +178,10 @@
   "screen.magik.click_to_unlock": "Click to unlock (1 point)",
   "screen.magik.assign_hint": "Press 1-4 to assign to a slot",
   "screen.magik.zoom_hint": "Scroll to zoom • Drag to pan",
-
   "message.magik.level_up": "Level up! You are now level %s",
   "message.magik.no_mana": "Not enough mana!",
   "message.magik.no_stamina": "Not enough stamina!",
   "message.magik.requirements_not_met": "You do not meet this item's requirements!",
-
   "key.categories.magik": "Magik RPG",
   "key.magik.open_menu": "Open Character Menu",
   "key.magik.dash": "Dash",

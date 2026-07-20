@@ -1,22 +1,18 @@
 {
   "itemGroup.magik": "Magik RPG",
-
   "item.magik.mana_crystal": "Cristal de Mana",
   "item.magik.mana_potion": "Poção de Mana",
   "item.magik.stamina_draught": "Elixir de Stamina",
-
   "item.magik.swift_blade": "Lâmina Veloz",
   "item.magik.swift_blade.tooltip": "Uma lâmina de duelo leve como pluma. Golpeia como um raio.",
   "item.magik.knight_sword": "Espada do Cavaleiro",
   "item.magik.knight_sword.tooltip": "A lâmina de confiança dos cavaleiros reais.",
   "item.magik.crystal_blade": "Lâmina de Cristal",
   "item.magik.crystal_blade.tooltip": "Um fio cristalino que encontra todos os pontos fracos.",
-
   "item.magik.warhammer": "Martelo de Guerra",
   "item.magik.battle_axe": "Machado de Batalha",
   "item.magik.giant_axe": "Machado Gigante",
   "item.magik.heavy_weapon.tooltip": "Arma pesada: lenta, brutal, escala com Força.",
-
   "item.magik.short_bow": "Arco Curto",
   "item.magik.short_bow.tooltip": "Leve e rápido de tensionar.",
   "item.magik.long_bow": "Arco Longo",
@@ -29,7 +25,6 @@
   "item.magik.arcane_bow.tooltip": "Canaliza mana em cada disparo.",
   "item.magik.legendary_bow": "Arco Lendário",
   "item.magik.legendary_bow.tooltip": "Uma relíquia de mestres arqueiros esquecidos.",
-
   "item.magik.wooden_shield": "Escudo de Madeira",
   "item.magik.wooden_shield.tooltip": "Simples, mas melhor que nada.",
   "item.magik.iron_shield": "Escudo de Ferro",
@@ -42,35 +37,20 @@
   "item.magik.obsidian_shield.tooltip": "Concede Resistência ao Fogo ao bloquear.",
   "item.magik.legendary_shield": "Escudo Lendário",
   "item.magik.legendary_shield.tooltip": "Uma muralha inquebrável: concede Resistência ao bloquear.",
-
-  "item.magik.arcane_staff": "Cajado Arcano",
-  "item.magik.arcane_staff.tooltip": "Dispara projéteis arcanos. Dano escala com Inteligência.",
-  "item.magik.fire_staff": "Cajado de Fogo",
-  "item.magik.fire_staff.tooltip": "Lança projéteis de fogo que incendeiam inimigos.",
-  "item.magik.ice_staff": "Cajado de Gelo",
-  "item.magik.ice_staff.tooltip": "Projéteis de gelo que causam lentidão.",
-  "item.magik.lightning_staff": "Cajado de Raio",
-  "item.magik.lightning_staff.tooltip": "Faíscas saltam para inimigos próximos.",
-  "item.magik.holy_staff": "Cajado Sagrado",
-  "item.magik.holy_staff.tooltip": "Projéteis de luz que curam você ao acertar.",
-  "item.magik.supreme_staff": "Cajado Supremo",
-  "item.magik.supreme_staff.tooltip": "O ápice dos cajados: queima, congela e devasta.",
-
+  "item.magik.staff": "Cajado",
+  "item.magik.staff.tooltip": "Dispara projéteis arcanos. Dano escala com Inteligência.",
   "item.magik.arcanite_helmet": "Elmo de Arcanita",
   "item.magik.arcanite_chestplate": "Peitoral de Arcanita",
   "item.magik.arcanite_leggings": "Calças de Arcanita",
   "item.magik.arcanite_boots": "Botas de Arcanita",
   "item.magik.arcanite_armor.tooltip": "Conjunto completo: +%s de Mana máxima.",
-
   "tooltip.magik.requires_level": "Requer nível %s",
   "tooltip.magik.requires_attribute": "Requer %s de %s",
   "tooltip.magik.crit_bonus": "+%s%% de chance crítica",
   "tooltip.magik.block_power": "Poder de bloqueio: -%s de dano",
   "tooltip.magik.bow_stats": "Tensão: %ss | Velocidade: %s%% | Dano: +%s%%",
   "tooltip.magik.staff_stats": "Dano mágico: %s | Mana: %s | Conjuração: %ss",
-
   "entity.magik.magic_bolt": "Projétil Mágico",
-
   "attribute.magik.vitality": "Vida",
   "attribute.magik.vitality.desc": "+2 de vida máxima por ponto.",
   "attribute.magik.strength": "Força",
@@ -85,13 +65,11 @@
   "attribute.magik.intelligence.desc": "+mana máxima, +dano mágico, magias mais baratas e rápidas.",
   "attribute.magik.mining": "Velocidade de Mineração",
   "attribute.magik.mining.desc": "+4% de velocidade ao quebrar blocos por ponto.",
-
   "skilltree.magik.arcane": "Arcano",
   "skilltree.magik.swordsman": "Espadachim",
   "skilltree.magik.archer": "Arqueiro",
   "skilltree.magik.heavy": "Arm. Pesado",
   "skilltree.magik.defense": "Defesa",
-
   "skill.magik.fireball": "Bola de Fogo",
   "skill.magik.fireball.desc": "Lança uma bola de fogo que incendeia o alvo.",
   "skill.magik.lightning": "Raio",
@@ -108,7 +86,6 @@
   "skill.magik.short_teleport.desc": "Teleporta uma curta distância na direção em que está olhando.",
   "skill.magik.weapon_summon": "Invocação de Armas",
   "skill.magik.weapon_summon.desc": "Invoca lâminas espectrais que atacam inimigos próximos por 15s.",
-
   "skill.magik.sword_combo": "Combo de Espada",
   "skill.magik.sword_combo.desc": "Por 8s, cada golpe da sequência causa dano crescente.",
   "skill.magik.spin_slash": "Corte Giratório",
@@ -125,7 +102,6 @@
   "skill.magik.sword_crit.desc": "+10% de chance crítica com espadas.",
   "skill.magik.sword_master": "Mestre da Espada",
   "skill.magik.sword_master.desc": "+10% de dano e velocidade de ataque com espadas.",
-
   "skill.magik.zoom": "Zoom",
   "skill.magik.zoom.desc": "A câmera aproxima ao tensionar um arco; +10% de dano à distância.",
   "skill.magik.explosive_arrow": "Flecha Explosiva",
@@ -142,7 +118,6 @@
   "skill.magik.rapid_fire.desc": "Arcos Magik tensionam 35% mais rápido.",
   "skill.magik.bow_crit": "Crítico Aprimorado",
   "skill.magik.bow_crit.desc": "+10% de chance crítica com arcos.",
-
   "skill.magik.giant_cleave": "Machado Gigante",
   "skill.magik.giant_cleave.desc": "Um golpe frontal colossal com dano massivo em área.",
   "skill.magik.hammer_slam": "Martelo de Guerra",
@@ -159,7 +134,6 @@
   "skill.magik.brutal_force.desc": "+15% de dano em todos os ataques com armas pesadas.",
   "skill.magik.total_destruction": "Destruição Total",
   "skill.magik.total_destruction.desc": "Um golpe devastador de dano colossal em área.",
-
   "skill.magik.reinforced_life": "Vida Reforçada",
   "skill.magik.reinforced_life.desc": "+4 de vida máxima permanente.",
   "skill.magik.damage_reduction": "Redução de Dano",
@@ -176,7 +150,6 @@
   "skill.magik.protective_shield.desc": "Uma barreira protetora que absorve dano por 30s.",
   "skill.magik.unbreakable_fortress": "Fortaleza Inabalável",
   "skill.magik.unbreakable_fortress.desc": "+30% de resistência a efeitos negativos e empurrões.",
-
   "title.magik.apprentice": "Aprendiz",
   "title.magik.warrior": "Guerreiro",
   "title.magik.knight": "Cavaleiro",
@@ -185,7 +158,6 @@
   "title.magik.master_archer": "Arqueiro Mestre",
   "title.magik.guardian": "Guardião",
   "title.magik.legend": "Lenda",
-
   "screen.magik.character": "Personagem",
   "screen.magik.skills": "Árvores de Habilidades",
   "screen.magik.skills_tab": "Habilidades",
@@ -206,12 +178,10 @@
   "screen.magik.click_to_unlock": "Clique para desbloquear (1 ponto)",
   "screen.magik.assign_hint": "Pressione 1-4 para atribuir a um slot",
   "screen.magik.zoom_hint": "Scroll para zoom • Arraste para mover",
-
   "message.magik.level_up": "Nível acima! Você agora é nível %s",
   "message.magik.no_mana": "Mana insuficiente!",
   "message.magik.no_stamina": "Stamina insuficiente!",
   "message.magik.requirements_not_met": "Você não atende aos requisitos deste item!",
-
   "key.categories.magik": "Magik RPG",
   "key.magik.open_menu": "Abrir Menu do Personagem",
   "key.magik.dash": "Dash",
