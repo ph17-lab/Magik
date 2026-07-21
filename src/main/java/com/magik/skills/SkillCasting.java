@@ -21,8 +21,6 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
-import net.minecraft.world.entity.LightningBolt;
-import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.projectile.Arrow;
@@ -169,18 +167,17 @@ public final class SkillCasting {
         return true;
     }
 
-    /** Calls down a (visual-only) lightning bolt on the aimed position + magic damage. */
+    /** Calls down a custom BLUE bolt from the sky onto the aimed position. */
     private static boolean castLightning(ServerPlayer player, PlayerRpg rpg) {
         Vec3 target = rayTarget(player, 24.0D);
         float damage = 8.0F * RpgStats.magicDamageMultiplier(rpg);
         ServerLevel level = (ServerLevel) player.level();
 
-        LightningBolt bolt = EntityType.LIGHTNING_BOLT.create(level);
-        if (bolt != null) {
-            bolt.moveTo(target);
-            bolt.setVisualOnly(true);
-            level.addFreshEntity(bolt);
-        }
+        SkillFx.skyBolt(level, target);
+        level.playSound(null, BlockPos.containing(target), SoundEvents.LIGHTNING_BOLT_THUNDER,
+                SoundSource.PLAYERS, 1.0F, 1.5F);
+        level.playSound(null, BlockPos.containing(target), SoundEvents.LIGHTNING_BOLT_IMPACT,
+                SoundSource.PLAYERS, 0.8F, 1.2F);
         for (LivingEntity entity : level.getEntitiesOfClass(LivingEntity.class,
                 new AABB(BlockPos.containing(target)).inflate(2.0D), hostileTo(player))) {
             entity.hurt(player.damageSources().indirectMagic(player, player), damage);
@@ -196,8 +193,12 @@ public final class SkillCasting {
             target.hurt(player.damageSources().indirectMagic(player, player), damage);
         }
         SkillFx.shockwave(level, player.position(), 5.0D, SkillFx.ARCANE_A, SkillFx.ARCANE_B);
+        SkillFx.sphereBurst(level, player.position().add(0.0D, 1.0D, 0.0D),
+                SkillFx.ARCANE_A, SkillFx.ARCANE_B, 48, 0.45D);
+        level.sendParticles(ParticleTypes.WITCH,
+                player.getX(), player.getY(1.0D), player.getZ(), 40, 2.0D, 1.0D, 2.0D, 0.15D);
         level.sendParticles(ParticleTypes.DRAGON_BREATH,
-                player.getX(), player.getY(0.5D), player.getZ(), 80, 3.0D, 0.8D, 3.0D, 0.1D);
+                player.getX(), player.getY(0.5D), player.getZ(), 60, 3.0D, 0.8D, 3.0D, 0.1D);
         level.sendParticles(ParticleTypes.FLASH,
                 player.getX(), player.getY(1.0D), player.getZ(), 1, 0.0D, 0.0D, 0.0D, 0.0D);
         playSound(player, SoundEvents.DRAGON_FIREBALL_EXPLODE, 1.2F);
@@ -254,22 +255,37 @@ public final class SkillCasting {
         return true;
     }
 
-    /** Ticked from RpgEvents: the summoned blades strike a nearby enemy. */
-    public static void tickWeaponSummon(ServerPlayer player, PlayerRpg rpg) {
+    /**
+     * Ticked from RpgEvents every tick while active: three purple spectral
+     * blades orbit the caster and periodically lunge at a nearby enemy.
+     */
+    public static void tickWeaponSummon(ServerPlayer player, PlayerRpg rpg, long gameTime) {
         ServerLevel level = (ServerLevel) player.level();
+
+        // Orbiting blades (drawn every other tick to stay light).
+        if (gameTime % 2 == 0) {
+            for (int i = 0; i < 3; i++) {
+                double theta = gameTime * 0.18D + i * (Math.PI * 2.0D / 3.0D);
+                Vec3 base = player.position().add(
+                        Math.cos(theta) * 1.4D, 0.7D, Math.sin(theta) * 1.4D);
+                SkillFx.blade(level, base, SkillFx.ARCANE_B, SkillFx.ARCANE_A);
+            }
+        }
+
+        // Strike once a second: a blade slashes through a random nearby enemy.
+        if (gameTime % 20 != 0) {
+            return;
+        }
         float damage = 4.0F * RpgStats.magicDamageMultiplier(rpg);
         List<LivingEntity> targets = level.getEntitiesOfClass(LivingEntity.class,
                 new AABB(player.blockPosition()).inflate(4.0D), hostileTo(player));
         if (!targets.isEmpty()) {
             LivingEntity target = targets.get(player.getRandom().nextInt(targets.size()));
             target.hurt(player.damageSources().indirectMagic(player, player), damage);
-            level.sendParticles(ParticleTypes.SWEEP_ATTACK,
-                    target.getX(), target.getY(0.75D), target.getZ(), 2, 0.2D, 0.2D, 0.2D, 0.0D);
+            SkillFx.bladeSlash(level, player.position(), target, SkillFx.ARCANE_A, SkillFx.ARCANE_B);
             level.playSound(null, target.blockPosition(),
                     SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 0.5F, 1.4F);
         }
-        level.sendParticles(ParticleTypes.END_ROD,
-                player.getX(), player.getY(1.0D), player.getZ(), 3, 0.8D, 0.5D, 0.8D, 0.02D);
     }
 
     // ------------------------------------------------------------------

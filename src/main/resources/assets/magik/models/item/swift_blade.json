@@ -1,6 +1,6 @@
 {
-  "parent": "minecraft:item/handheld",
+  "parent": "magik:item/sword_3d",
   "textures": {
-    "layer0": "magik:item/swift_blade"
+    "base": "magik:item/sword_3d_swift_blade"
   }
 }

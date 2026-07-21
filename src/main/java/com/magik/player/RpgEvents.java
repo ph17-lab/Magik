@@ -3,13 +3,19 @@ package com.magik.player;
 import com.magik.MagikMod;
 import com.magik.combat.RpgAttributeApplier;
 import com.magik.item.RpgGear;
+import com.magik.item.RpgShieldItem;
 import com.magik.network.MagikNetwork;
 import com.magik.skills.SkillCasting;
+import com.magik.skills.SkillFx;
 import com.magik.skills.SkillTrees;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.common.capabilities.RegisterCapabilitiesEvent;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.TickEvent;
@@ -120,8 +126,25 @@ public final class RpgEvents {
             }
 
             // Summoned spectral weapons aura (Invocação de Armas).
-            if (gameTime < rpg.getWeaponSummonUntil() && gameTime % 20 == 0) {
-                SkillCasting.tickWeaponSummon(player, rpg);
+            if (gameTime < rpg.getWeaponSummonUntil()) {
+                SkillCasting.tickWeaponSummon(player, rpg, gameTime);
+            }
+
+            // Active guard: blocking with an RPG shield projects a green
+            // barrier and drains stamina; when it empties the guard breaks.
+            if (player.isBlocking() && player.getUseItem().getItem() instanceof RpgShieldItem) {
+                if (rpg.consumeStamina(0.4F, gameTime)) {
+                    if (gameTime % 4 == 0) {
+                        SkillFx.guardDome((ServerLevel) player.level(), player);
+                    }
+                } else {
+                    // Guard break: the shield goes on cooldown for 3 seconds.
+                    ItemStack shield = player.getUseItem();
+                    player.stopUsingItem();
+                    player.getCooldowns().addCooldown(shield.getItem(), 60);
+                    player.level().playSound(null, player.blockPosition(),
+                            SoundEvents.SHIELD_BREAK, SoundSource.PLAYERS, 0.8F, 1.0F);
+                }
             }
 
             // Unequip armor whose level/attribute requirements are not met.

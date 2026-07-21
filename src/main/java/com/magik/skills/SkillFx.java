@@ -1,8 +1,12 @@
 package com.magik.skills;
 
 import net.minecraft.core.particles.DustParticleOptions;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.Mth;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Vector3f;
 
@@ -26,6 +30,10 @@ public final class SkillFx {
     public static final Vector3f DEFENSE_B = new Vector3f(0.70F, 0.88F, 1.00F);
     public static final Vector3f GOLD = new Vector3f(1.00F, 0.84F, 0.25F);
     public static final Vector3f HEAL_GREEN = new Vector3f(0.35F, 0.95F, 0.45F);
+    public static final Vector3f LIGHTNING_A = new Vector3f(0.35F, 0.62F, 1.00F);
+    public static final Vector3f LIGHTNING_B = new Vector3f(0.78F, 0.90F, 1.00F);
+    public static final Vector3f GUARD_A = new Vector3f(0.24F, 0.90F, 0.36F);
+    public static final Vector3f GUARD_B = new Vector3f(0.62F, 1.00F, 0.62F);
 
     private SkillFx() {
     }
@@ -94,5 +102,93 @@ public final class SkillFx {
         Vec3 hand = player.position().add(look.scale(0.6D)).add(0.0D, 1.1D, 0.0D);
         level.sendParticles(new DustParticleOptions(color, 1.2F),
                 hand.x, hand.y, hand.z, 14, 0.25D, 0.25D, 0.25D, 0.0D);
+    }
+
+    /** A jagged blue bolt striking down from the sky onto the target point. */
+    public static void skyBolt(ServerLevel level, Vec3 target) {
+        RandomSource random = level.random;
+        double ox = 0.0D;
+        double oz = 0.0D;
+        for (double y = 18.0D; y >= 0.2D; y -= 0.4D) {
+            // Jitter narrows toward the ground so the bolt converges on target.
+            double sway = y / 18.0D;
+            ox = Mth.clamp(ox + (random.nextDouble() - 0.5D) * 0.6D * sway, -1.6D, 1.6D);
+            oz = Mth.clamp(oz + (random.nextDouble() - 0.5D) * 0.6D * sway, -1.6D, 1.6D);
+            double px = target.x + ox * sway;
+            double pz = target.z + oz * sway;
+            level.sendParticles(new DustParticleOptions(LIGHTNING_A, 1.9F),
+                    px, target.y + y, pz, 1, 0.03D, 0.03D, 0.03D, 0.0D);
+            level.sendParticles(new DustParticleOptions(LIGHTNING_B, 1.1F),
+                    px, target.y + y, pz, 1, 0.0D, 0.0D, 0.0D, 0.0D);
+        }
+        level.sendParticles(ParticleTypes.FLASH, target.x, target.y + 0.5D, target.z,
+                1, 0.0D, 0.0D, 0.0D, 0.0D);
+        level.sendParticles(ParticleTypes.ELECTRIC_SPARK, target.x, target.y + 0.3D, target.z,
+                25, 0.6D, 0.5D, 0.6D, 0.25D);
+        ring(level, target.add(0.0D, 0.1D, 0.0D), 1.8D, LIGHTNING_A, LIGHTNING_B, 1.4F, 0.4D);
+    }
+
+    /** An expanding sphere of dust flying outward - the arcane nova core. */
+    public static void sphereBurst(ServerLevel level, Vec3 center,
+                                   Vector3f colorA, Vector3f colorB, int points, double speed) {
+        double golden = Math.PI * (3.0D - Math.sqrt(5.0D));
+        for (int i = 0; i < points; i++) {
+            double vy = 1.0D - (i / (double) (points - 1)) * 2.0D;
+            double r = Math.sqrt(1.0D - vy * vy);
+            double theta = golden * i;
+            double vx = Math.cos(theta) * r;
+            double vz = Math.sin(theta) * r;
+            // count=0 makes the offsets act as a velocity vector.
+            level.sendParticles(new DustParticleOptions(i % 2 == 0 ? colorA : colorB, 1.3F),
+                    center.x, center.y, center.z, 0, vx, vy * 0.6D, vz, speed);
+        }
+    }
+
+    /** A vertical spectral blade (edge, tip and crossguard) drawn in dust. */
+    public static void blade(ServerLevel level, Vec3 base, Vector3f edge, Vector3f glow) {
+        for (int i = 0; i <= 5; i++) {
+            level.sendParticles(new DustParticleOptions(i >= 4 ? glow : edge, 0.95F),
+                    base.x, base.y + i * 0.22D, base.z, 1, 0.02D, 0.02D, 0.02D, 0.0D);
+        }
+        level.sendParticles(new DustParticleOptions(glow, 0.8F),
+                base.x + 0.14D, base.y + 0.22D, base.z, 1, 0.0D, 0.0D, 0.0D, 0.0D);
+        level.sendParticles(new DustParticleOptions(glow, 0.8F),
+                base.x - 0.14D, base.y + 0.22D, base.z, 1, 0.0D, 0.0D, 0.0D, 0.0D);
+    }
+
+    /** A diagonal spectral slash cutting through the target. */
+    public static void bladeSlash(ServerLevel level, Vec3 from, LivingEntity target,
+                                  Vector3f colorA, Vector3f colorB) {
+        Vec3 center = target.position().add(0.0D, target.getBbHeight() * 0.5D, 0.0D);
+        Vec3 dir = center.subtract(from).normalize();
+        Vec3 side = dir.cross(new Vec3(0.0D, 1.0D, 0.0D)).normalize();
+        Vec3 start = center.add(side.scale(0.6D)).add(0.0D, 0.9D, 0.0D);
+        Vec3 end = center.subtract(side.scale(0.6D)).add(0.0D, -0.5D, 0.0D);
+        for (int i = 0; i <= 8; i++) {
+            Vec3 point = start.lerp(end, i / 8.0D);
+            level.sendParticles(new DustParticleOptions(i % 2 == 0 ? colorA : colorB, 1.1F),
+                    point.x, point.y, point.z, 1, 0.02D, 0.02D, 0.02D, 0.0D);
+        }
+        level.sendParticles(ParticleTypes.SWEEP_ATTACK,
+                center.x, center.y, center.z, 1, 0.0D, 0.0D, 0.0D, 0.0D);
+    }
+
+    /** A green barrier dome projected in front of a blocking player. */
+    public static void guardDome(ServerLevel level, ServerPlayer player) {
+        double yaw = Math.toRadians(player.getYRot());
+        double facing = Math.atan2(-Math.sin(yaw), Math.cos(yaw));
+        Vec3 chest = player.position().add(0.0D, 1.1D, 0.0D);
+        for (int row = 0; row < 3; row++) {
+            double lift = (row - 1) * 0.45D;
+            double radius = 1.1D * Math.cos(lift * 0.7D);
+            for (int i = 0; i < 5; i++) {
+                double t = (i / 4.0D) - 0.5D;                 // -0.5 .. 0.5
+                double theta = facing + t * (Math.PI * 0.7D); // ~126 degree shield face
+                level.sendParticles(new DustParticleOptions((row + i) % 2 == 0 ? GUARD_A : GUARD_B, 1.0F),
+                        chest.x + Math.cos(theta) * radius, chest.y + lift,
+                        chest.z + Math.sin(theta) * radius,
+                        1, 0.02D, 0.02D, 0.02D, 0.0D);
+            }
+        }
     }
 }

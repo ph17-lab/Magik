@@ -11,7 +11,7 @@ Um mod RPG completo, moderno e otimizado para **Minecraft Java Edition 1.20.1 + 
 | **Progressão** | XP RPG próprio (separado do XP vanilla), curva configurável, barra animada |
 | **Atributos** | Vida, Força, Resistência, Agilidade, Precisão, Inteligência, Vel. de Mineração |
 | **Mana** | Barra própria, regeneração natural, poções, consumo por magias |
-| **Stamina** | Barra própria, regeneração com atraso, usada por dash e golpes |
+| **Stamina** | Barra própria, regeneração com atraso, usada por dash, golpes e bloqueio com escudo (segurar o escudo projeta uma barreira verde e drena stamina; se esgotar, a guarda quebra) |
 | **5 Árvores** | Arcano, Espadachim, Arqueiro, Armamento Pesado, Defesa — 40 habilidades |
 | **Classes livres** | Sem classe fixa; títulos por progressão (Aprendiz → Lenda) |
 | **Arsenal** | 3 espadas, 3 armas pesadas, 6 arcos, 6 escudos 3D, cajado 3D (modelo Blockbench próprio), armadura Arcanita |
