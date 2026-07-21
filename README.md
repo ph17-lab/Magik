@@ -36,6 +36,8 @@ Um mod RPG completo, moderno e otimizado para **Minecraft Java Edition 1.20.1 + 
 ./gradlew runClient    # abre o cliente de desenvolvimento
 ```
 
+Use o jar **`magik-<versão>-all.jar`**: ele embute o [GeckoLib](https://github.com/bernie-g/geckolib) (jar-in-jar), usado para renderizar o cajado a partir da geometria Bedrock (`assets/magik/geo/staff.geo.json`) sem limitações de rotação do formato vanilla.
+
 Requer Java 17. O primeiro build baixa e decompila o Minecraft (demora alguns minutos).
 
 ## Configuração

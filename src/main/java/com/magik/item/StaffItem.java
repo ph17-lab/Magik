@@ -12,13 +12,20 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
+import net.minecraftforge.client.extensions.common.IClientItemExtensions;
+import software.bernie.geckolib.animatable.GeoItem;
+import software.bernie.geckolib.core.animatable.instance.AnimatableInstanceCache;
+import software.bernie.geckolib.core.animation.AnimatableManager;
+import software.bernie.geckolib.util.GeckoLibUtil;
 
 import javax.annotation.Nullable;
 import java.util.List;
+import java.util.function.Consumer;
 
 /**
  * Magic staff family: right click fires a {@link MagicBoltEntity} of the
@@ -27,13 +34,16 @@ import java.util.List;
  * and discounts mana, and each element applies its own on-hit effect
  * (fire ignites, ice slows, lightning chains sparks, holy heals the caster...).
  */
-public class StaffItem extends Item implements RpgGear {
+public class StaffItem extends Item implements RpgGear, GeoItem {
 
     private final MagicBoltEntity.Variant variant;
     private final float baseDamage;
     private final float baseManaCost;
     private final int castCooldownTicks;
     private final ItemRequirements requirements;
+
+    // GeckoLib: the staff renders from a Bedrock .geo.json model.
+    private final AnimatableInstanceCache geckoCache = GeckoLibUtil.createInstanceCache(this);
 
     public StaffItem(MagicBoltEntity.Variant variant, float baseDamage, float baseManaCost,
                      int castCooldownTicks, ItemRequirements requirements, Properties properties) {
@@ -48,6 +58,35 @@ public class StaffItem extends Item implements RpgGear {
     @Override
     public ItemRequirements getRpgRequirements() {
         return requirements;
+    }
+
+    // ------------------------------------------------------------------
+    // GeckoLib wiring
+    // ------------------------------------------------------------------
+
+    @Override
+    public void initializeClient(Consumer<IClientItemExtensions> consumer) {
+        consumer.accept(new IClientItemExtensions() {
+            private com.magik.client.render.StaffRenderer renderer;
+
+            @Override
+            public BlockEntityWithoutLevelRenderer getCustomRenderer() {
+                if (this.renderer == null) {
+                    this.renderer = new com.magik.client.render.StaffRenderer();
+                }
+                return this.renderer;
+            }
+        });
+    }
+
+    @Override
+    public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
+        // Static model - no animations yet.
+    }
+
+    @Override
+    public AnimatableInstanceCache getAnimatableInstanceCache() {
+        return this.geckoCache;
     }
 
     @Override

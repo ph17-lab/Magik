@@ -55,10 +55,26 @@ minecraft {
 sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 repositories {
+    maven {
+        name = 'GeckoLib'
+        url = 'https://dl.cloudsmith.io/public/geckolib3/geckolib/maven/'
+        content {
+            includeGroupByRegex 'software\\.bernie.*'
+        }
+    }
 }
+
+jarJar.enable()
 
 dependencies {
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
+
+    // GeckoLib powers the Bedrock-geometry item models (staff). It is
+    // embedded via jar-in-jar so the shipped jar is self-contained.
+    implementation fg.deobf("software.bernie.geckolib:geckolib-forge-${minecraft_version}:${geckolib_version}")
+    jarJar("software.bernie.geckolib:geckolib-forge-${minecraft_version}:[${geckolib_version},4.5)") {
+        jarJar.pin(it, geckolib_version)
+    }
 }
 
 tasks.named('processResources', ProcessResources).configure {
