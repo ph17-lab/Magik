@@ -25,6 +25,10 @@ public final class RpgAttributeApplier {
     private static final UUID REINFORCED_LIFE_UUID = UUID.fromString("c8b9f8f0-1a2b-4c3d-9e4f-5a6b7c8d9e04");
     private static final UUID SWORD_MASTER_SPEED_UUID = UUID.fromString("c8b9f8f0-1a2b-4c3d-9e4f-5a6b7c8d9e05");
     private static final UUID FORTRESS_KB_UUID = UUID.fromString("c8b9f8f0-1a2b-4c3d-9e4f-5a6b7c8d9e06");
+    private static final UUID DAGGER_MOVE_UUID = UUID.fromString("c8b9f8f0-1a2b-4c3d-9e4f-5a6b7c8d9e07");
+    private static final UUID DAGGER_ATTACK_UUID = UUID.fromString("c8b9f8f0-1a2b-4c3d-9e4f-5a6b7c8d9e08");
+    private static final UUID SHADOW_MASTER_MOVE_UUID = UUID.fromString("c8b9f8f0-1a2b-4c3d-9e4f-5a6b7c8d9e09");
+    private static final UUID SHADOW_MASTER_ATTACK_UUID = UUID.fromString("c8b9f8f0-1a2b-4c3d-9e4f-5a6b7c8d9e0a");
 
     /** Extra max health granted by the Reinforced Life passive. */
     public static final double REINFORCED_LIFE_HEALTH = 4.0D;
@@ -58,6 +62,28 @@ public final class RpgAttributeApplier {
         set(player, Attributes.KNOCKBACK_RESISTANCE, FORTRESS_KB_UUID, "magik.fortress",
                 rpg.hasSkill(SkillTrees.UNBREAKABLE_FORTRESS) ? FORTRESS_KNOCKBACK_RESIST : 0.0D,
                 AttributeModifier.Operation.ADDITION);
+
+        // --- Adaga (dagger) tree buffs ---
+        long gameTime = player.level().getGameTime();
+        // Ghost Steps (+30%) or Shadow Veil (+60%) movement surge (take the higher).
+        double daggerMove = 0.0D;
+        if (gameTime < rpg.getShadowVeilUntil()) {
+            daggerMove = 0.60D;
+        } else if (gameTime < rpg.getGhostStepsUntil()) {
+            daggerMove = 0.30D;
+        }
+        set(player, Attributes.MOVEMENT_SPEED, DAGGER_MOVE_UUID, "magik.dagger_move",
+                daggerMove, AttributeModifier.Operation.MULTIPLY_TOTAL);
+        // Dagger Dance attack-speed surge.
+        set(player, Attributes.ATTACK_SPEED, DAGGER_ATTACK_UUID, "magik.dagger_dance",
+                gameTime < rpg.getDaggerDanceUntil() ? 0.50D : 0.0D,
+                AttributeModifier.Operation.MULTIPLY_TOTAL);
+        // Shadow Master permanent passive (attack speed + movement).
+        boolean master = rpg.hasSkill(SkillTrees.SHADOW_MASTER);
+        set(player, Attributes.MOVEMENT_SPEED, SHADOW_MASTER_MOVE_UUID, "magik.shadow_master_move",
+                master ? 0.10D : 0.0D, AttributeModifier.Operation.MULTIPLY_TOTAL);
+        set(player, Attributes.ATTACK_SPEED, SHADOW_MASTER_ATTACK_UUID, "magik.shadow_master_attack",
+                master ? 0.15D : 0.0D, AttributeModifier.Operation.MULTIPLY_TOTAL);
 
         // Never leave the player above their (possibly reduced) max health.
         if (player.getHealth() > player.getMaxHealth()) {

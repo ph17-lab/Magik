@@ -52,6 +52,7 @@ public final class PlayerTitles {
             case ADVANCED_ARCANE -> "advanced_arcanist";
             case ARCHER -> "master_archer";
             case DEFENSE -> "guardian";
+            case DAGGER -> veteran ? "shadow_master" : "assassin";
             case SWORDSMAN, HEAVY -> veteran ? "knight" : "warrior";
         };
     }

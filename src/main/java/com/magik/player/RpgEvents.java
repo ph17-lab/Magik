@@ -138,6 +138,13 @@ public final class RpgEvents {
                 SkillCasting.tickVoidPresence(player, rpg, gameTime);
             }
 
+            // Re-apply attribute modifiers on the tick a dagger buff expires so
+            // the speed/attack-speed surge is removed cleanly.
+            if (gameTime == rpg.getGhostStepsUntil() || gameTime == rpg.getShadowVeilUntil()
+                    || gameTime == rpg.getDaggerDanceUntil()) {
+                RpgAttributeApplier.apply(player, rpg);
+            }
+
             // Becoming an Advanced Arcanist (Intelligence 50) grants the
             // purple-and-black Advanced Staff, once.
             if (!rpg.isAdvancedStaffGranted() && gameTime % 40 == 0

@@ -64,6 +64,11 @@ public class PlayerRpg {
     private long floatingSpheresUntil;
     private long voidPresenceUntil;
     private boolean advancedStaffGranted;
+    // Adaga (dagger) transient buff timers.
+    private long ghostStepsUntil;
+    private long shadowVeilUntil;
+    private long daggerDanceUntil;
+    private long stealthUntil;
     private long lastCombatTime;
     private ArrowEffect nextArrowEffect = ArrowEffect.NONE;
     private long nextArrowUntil;
@@ -308,6 +313,38 @@ public class PlayerRpg {
 
     public void setAdvancedStaffGranted(boolean granted) {
         this.advancedStaffGranted = granted;
+    }
+
+    public long getGhostStepsUntil() {
+        return ghostStepsUntil;
+    }
+
+    public void setGhostStepsUntil(long until) {
+        this.ghostStepsUntil = until;
+    }
+
+    public long getShadowVeilUntil() {
+        return shadowVeilUntil;
+    }
+
+    public void setShadowVeilUntil(long until) {
+        this.shadowVeilUntil = until;
+    }
+
+    public long getDaggerDanceUntil() {
+        return daggerDanceUntil;
+    }
+
+    public void setDaggerDanceUntil(long until) {
+        this.daggerDanceUntil = until;
+    }
+
+    public long getStealthUntil() {
+        return stealthUntil;
+    }
+
+    public void setStealthUntil(long until) {
+        this.stealthUntil = until;
     }
 
     public long getLastCombatTime() {

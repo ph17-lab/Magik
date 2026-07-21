@@ -68,6 +68,11 @@ public final class SkillCasting {
             player.displayClientMessage(Component.translatable("message.magik.need_staff"), true);
             return;
         }
+        // Adaga skills only work when dual-wielding daggers (one in each hand).
+        if (skill.getTree() == SkillTrees.Tree.DAGGER && !holdingDaggers(player)) {
+            player.displayClientMessage(Component.translatable("message.magik.need_daggers"), true);
+            return;
+        }
 
         float manaCost = skill.getManaCost() * RpgStats.manaCostMultiplier(rpg);
         float staminaCost = skill.getStaminaCost();
@@ -180,6 +185,27 @@ public final class SkillCasting {
             }
             case SkillTrees.ARCANE_COMET -> castArcaneComet(player, rpg);
 
+            // --- Adaga ---
+            case SkillTrees.SWIFT_STRIKE -> castSwiftStrike(player, rpg);
+            case SkillTrees.SHADOW_CUT -> castShadowCut(player, rpg);
+            case SkillTrees.GHOST_STEPS -> {
+                rpg.setGhostStepsUntil(gameTime + 160);
+                com.magik.combat.RpgAttributeApplier.apply(player, rpg);
+                feedback(player, ParticleTypes.CLOUD, 12, SoundEvents.PHANTOM_FLAP, 1.6F);
+                yield true;
+            }
+            case SkillTrees.SHADOW_VEIL -> castShadowVeil(player, rpg, gameTime);
+            case SkillTrees.BLADE_RAIN -> castBladeRain(player, rpg);
+            case SkillTrees.BACKSTAB -> castBackstab(player, rpg);
+            case SkillTrees.DAGGER_DANCE -> {
+                rpg.setDaggerDanceUntil(gameTime + 200);
+                com.magik.combat.RpgAttributeApplier.apply(player, rpg);
+                SkillFx.ring(level(player), player.position().add(0.0D, 1.0D, 0.0D), 1.3D,
+                        SkillFx.ARCANE_A, SkillFx.ARCANE_B, 1.2F, 0.1D);
+                playSound(player, SoundEvents.PLAYER_ATTACK_SWEEP, 1.5F);
+                yield true;
+            }
+
             default -> false;
         };
     }
@@ -187,6 +213,133 @@ public final class SkillCasting {
     private static boolean holdingStaff(ServerPlayer player) {
         return player.getMainHandItem().getItem() instanceof com.magik.item.StaffItem
                 || player.getOffhandItem().getItem() instanceof com.magik.item.StaffItem;
+    }
+
+    /** True only when a dagger is held in BOTH hands. */
+    public static boolean holdingDaggers(ServerPlayer player) {
+        return player.getMainHandItem().getItem() instanceof com.magik.item.Dagger
+                && player.getOffhandItem().getItem() instanceof com.magik.item.Dagger;
+    }
+
+    /** Shadow-purple dagger damage: melee scaling + a flat rogue base. */
+    private static float daggerDamage(PlayerRpg rpg, float base) {
+        float bonus = rpg.hasSkill(SkillTrees.SHADOW_MASTER) ? 1.2F : 1.0F;
+        return base * RpgStats.meleeDamageMultiplier(rpg) * bonus;
+    }
+
+    /** The nearest hostile the player is looking at, within range. */
+    private static LivingEntity lookedAtEnemy(ServerPlayer player, double range) {
+        Vec3 start = player.getEyePosition();
+        Vec3 end = start.add(player.getLookAngle().scale(range));
+        return level(player).getEntitiesOfClass(LivingEntity.class,
+                        new AABB(start, end).inflate(1.5D), hostileTo(player)).stream()
+                .filter(e -> distanceToSegment(e.position().add(0.0D, e.getBbHeight() * 0.5D, 0.0D),
+                        start, end) <= 1.6D)
+                .min(java.util.Comparator.comparingDouble(e -> e.distanceToSqr(player)))
+                .orElse(null);
+    }
+
+    private static void daggerSlashFx(ServerLevel level, LivingEntity target) {
+        Vec3 c = target.position().add(0.0D, target.getBbHeight() * 0.5D, 0.0D);
+        level.sendParticles(ParticleTypes.SWEEP_ATTACK, c.x, c.y, c.z, 1, 0.0D, 0.0D, 0.0D, 0.0D);
+        level.sendParticles(new DustParticleOptions(SkillFx.ARCANE_A, 1.1F),
+                c.x, c.y, c.z, 8, 0.3D, 0.3D, 0.3D, 0.02D);
+    }
+
+    /** Golpe Veloz: lunge forward and strike the enemy in front. */
+    private static boolean castSwiftStrike(ServerPlayer player, PlayerRpg rpg) {
+        Vec3 look = player.getLookAngle();
+        Vec3 lunge = new Vec3(look.x, 0.0D, look.z).normalize().scale(0.9D).add(0.0D, 0.15D, 0.0D);
+        player.setDeltaMovement(lunge);
+        player.hurtMarked = true;
+        LivingEntity target = lookedAtEnemy(player, 4.0D);
+        if (target != null) {
+            target.hurt(player.damageSources().playerAttack(player), daggerDamage(rpg, 6.0F));
+            daggerSlashFx(level(player), target);
+        }
+        SkillFx.slashArc(level(player), player, 1.4D, SkillFx.ARCANE_A, SkillFx.ARCANE_B);
+        playSound(player, SoundEvents.PLAYER_ATTACK_SWEEP, 1.7F);
+        return true;
+    }
+
+    /** Corte Sombrio: two near-instant guaranteed-crit hits. */
+    private static boolean castShadowCut(ServerPlayer player, PlayerRpg rpg) {
+        LivingEntity target = lookedAtEnemy(player, 4.0D);
+        if (target == null) {
+            return false;
+        }
+        float hit = daggerDamage(rpg, 4.0F) * RpgStats.CRIT_MULTIPLIER;
+        target.hurt(player.damageSources().playerAttack(player), hit);
+        target.invulnerableTime = 0;
+        target.hurt(player.damageSources().playerAttack(player), hit);
+        daggerSlashFx(level(player), target);
+        level(player).sendParticles(ParticleTypes.CRIT,
+                target.getX(), target.getY(0.8D), target.getZ(), 14, 0.3D, 0.3D, 0.3D, 0.2D);
+        playSound(player, SoundEvents.PLAYER_ATTACK_CRIT, 1.4F);
+        return true;
+    }
+
+    /** Véu das Sombras: turn invisible with a big speed surge. */
+    private static boolean castShadowVeil(ServerPlayer player, PlayerRpg rpg, long gameTime) {
+        rpg.setShadowVeilUntil(gameTime + 200);
+        player.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, 200, 0, false, false));
+        com.magik.combat.RpgAttributeApplier.apply(player, rpg);
+        SkillFx.sphereBurst(level(player), player.position().add(0.0D, 1.0D, 0.0D),
+                SkillFx.ARCANE_B, SkillFx.ARCANE_A, 30, 0.25D);
+        playSound(player, SoundEvents.ENDERMAN_TELEPORT, 0.8F);
+        return true;
+    }
+
+    /** Chuva de Lâminas: rapid cuts in a small radius around the player. */
+    private static boolean castBladeRain(ServerPlayer player, PlayerRpg rpg) {
+        ServerLevel level = level(player);
+        float damage = daggerDamage(rpg, 4.5F);
+        for (LivingEntity target : level.getEntitiesOfClass(LivingEntity.class,
+                new AABB(player.blockPosition()).inflate(3.0D), hostileTo(player))) {
+            target.hurt(player.damageSources().playerAttack(player), damage);
+            daggerSlashFx(level, target);
+        }
+        for (int i = 0; i < 20; i++) {
+            double a = (Math.PI * 2.0D / 20.0D) * i;
+            level.sendParticles(new DustParticleOptions(SkillFx.ARCANE_A, 1.2F),
+                    player.getX() + Math.cos(a) * 2.5D, player.getY(0.2D) + (i % 3) * 0.3D,
+                    player.getZ() + Math.sin(a) * 2.5D, 1, 0.0D, 0.0D, 0.0D, 0.0D);
+        }
+        SkillFx.ring(level, player.position().add(0.0D, 0.1D, 0.0D), 3.0D,
+                SkillFx.ARCANE_A, SkillFx.ARCANE_B, 1.1F, 0.1D);
+        playSound(player, SoundEvents.PLAYER_ATTACK_SWEEP, 1.3F);
+        return true;
+    }
+
+    /** Punhalada nas Costas: teleport BEHIND the target and strike for heavy damage + bleed. */
+    private static boolean castBackstab(ServerPlayer player, PlayerRpg rpg) {
+        LivingEntity target = lookedAtEnemy(player, 18.0D);
+        if (target == null) {
+            player.displayClientMessage(Component.translatable("message.magik.no_target"), true);
+            return false;
+        }
+        ServerLevel level = level(player);
+        level.sendParticles(ParticleTypes.PORTAL,
+                player.getX(), player.getY(1.0D), player.getZ(), 25, 0.3D, 0.6D, 0.3D, 0.3D);
+
+        // Land just behind the target relative to the target's facing.
+        Vec3 behind = target.position().subtract(
+                Vec3.directionFromRotation(0.0F, target.getYRot()).scale(1.0D));
+        player.teleportTo(behind.x, target.getY(), behind.z);
+        player.lookAt(net.minecraft.commands.arguments.EntityAnchorArgument.Anchor.EYES,
+                target.position().add(0.0D, target.getEyeHeight(), 0.0D));
+
+        float damage = daggerDamage(rpg, 12.0F) * RpgStats.CRIT_MULTIPLIER;
+        target.hurt(player.damageSources().playerAttack(player), damage);
+        // Bleed: wither ticks read as bleeding.
+        target.addEffect(new MobEffectInstance(MobEffects.WITHER, 100, 1));
+        daggerSlashFx(level, target);
+        level.sendParticles(ParticleTypes.CRIT,
+                target.getX(), target.getY(0.9D), target.getZ(), 20, 0.3D, 0.4D, 0.3D, 0.3D);
+        level.sendParticles(ParticleTypes.REVERSE_PORTAL,
+                player.getX(), player.getY(1.0D), player.getZ(), 20, 0.3D, 0.6D, 0.3D, 0.2D);
+        playSound(player, SoundEvents.PLAYER_ATTACK_CRIT, 0.9F);
+        return true;
     }
 
     /** Void Presence: +30% spell damage while the buff is active. */

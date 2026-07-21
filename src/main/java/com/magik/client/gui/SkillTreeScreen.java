@@ -54,6 +54,7 @@ public class SkillTreeScreen extends Screen {
             case HEAVY -> 0xFFC9862E;
             case DEFENSE -> 0xFFE3C55A;
             case ADVANCED_ARCANE -> 0xFF8A2BE2;
+            case DAGGER -> 0xFF9B59D0;
         };
     }
 

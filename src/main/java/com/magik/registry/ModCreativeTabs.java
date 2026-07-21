@@ -23,6 +23,8 @@ public final class ModCreativeTabs {
                         output.accept(ModItems.SWIFT_BLADE.get());
                         output.accept(ModItems.KNIGHT_SWORD.get());
                         output.accept(ModItems.CRYSTAL_BLADE.get());
+                        // Daggers
+                        output.accept(ModItems.SHADOW_DAGGER.get());
                         // Heavy weapons
                         output.accept(ModItems.WARHAMMER.get());
                         output.accept(ModItems.BATTLE_AXE.get());

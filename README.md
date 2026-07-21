@@ -2,7 +2,7 @@
 
 Um mod RPG completo, moderno e otimizado para **Minecraft Java Edition 1.20.1 + Forge (47.x)**, mantendo totalmente o estilo visual original do jogo. Compatível com singleplayer e servidores multiplayer.
 
-![Forge](https://img.shields.io/badge/Forge-1.20.1--47.2.0-orange) ![Java](https://img.shields.io/badge/Java-17-blue)
+![Forge](https://img.shields.io/badge/Forge-1.20.1--47.2.0-orange) ![Java](https://img.shields.io/badge/Java-17-blue) ![Versão](https://img.shields.io/badge/vers%C3%A3o-2.0-purple)
 
 ## Conteúdo
 
@@ -12,13 +12,15 @@ Um mod RPG completo, moderno e otimizado para **Minecraft Java Edition 1.20.1 + 
 | **Atributos** | Vida, Força, Resistência, Agilidade, Precisão, Inteligência, Vel. de Mineração |
 | **Mana** | Barra própria, regeneração natural, poções, consumo por magias |
 | **Stamina** | Barra própria, regeneração com atraso, usada por dash, golpes e bloqueio com escudo (segurar o escudo projeta uma barreira verde e drena stamina; se esgotar, a guarda quebra) |
-| **6 Árvores** | Arcano, Espadachim, Arqueiro, Armamento Pesado, Defesa e **Arcano Avançado** — 55 habilidades |
+| **7 Árvores** | Arcano, Espadachim, Arqueiro, Armamento Pesado, Defesa, **Arcano Avançado** e **Adaga** — 63 habilidades |
+| **Classe Adaga** | Nova classe furtiva com 8 habilidades (Golpe Veloz, Véu das Sombras, Punhalada nas Costas com teleporte...). A adaga só funciona empunhando **uma em cada mão** |
 | **Arcano Avançado** | 15 magias de cajado (Orbe das Sombras, Chuva de Meteoros, Raio do Caos, Fissura Dimensional...) — requer Inteligência 50 e cajado em mãos; ao atingir Int 50 o jogador recebe o **Cajado Arcano Avançado** (roxo/preto, orbe roxo) |
 | **Classes livres** | Sem classe fixa; títulos por progressão (Aprendiz → Lenda), nível máximo 150 |
-| **Arsenal** | 3 espadas, 3 armas pesadas, 6 arcos, 6 escudos 3D, cajado 3D (modelo Blockbench próprio), armadura Arcanita |
+| **Arsenal** | 3 espadas 3D, adaga 3D dual-wield, 3 armas pesadas 3D (2 machados + warhammer), 6 arcos, 6 escudos 3D, 2 cajados 3D (GeckoLib), armadura Arcanita |
 | **Raridades** | Comum → Incomum → Raro → Épico → **Lendário** → **Mítico** |
 | **Requisitos** | Nível e atributos mínimos por equipamento (tooltip colorido) |
-| **HUD** | Vida/Mana/Stamina, nível+título, XP animado, 4 slots de habilidade com cooldown |
+| **HUD** | Barra de Vida/Mana/Stamina (corações vanilla ocultos), nível+título, XP animado, 4 slots de habilidade com cooldown |
+| **Compatibilidade** | Better Combat (opcional): armas de corpo-a-corpo têm `weapon_attributes` para combos/alcance |
 
 ## Controles (padrão)
 

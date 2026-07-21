@@ -28,7 +28,7 @@ public final class SkillTrees {
 
     /** The archetype trees of the free class system. */
     public enum Tree {
-        ARCANE, SWORDSMAN, ARCHER, HEAVY, DEFENSE, ADVANCED_ARCANE;
+        ARCANE, SWORDSMAN, ARCHER, HEAVY, DEFENSE, ADVANCED_ARCANE, DAGGER;
 
         public Component getDisplayName() {
             return Component.translatable("skilltree.magik." + name().toLowerCase(Locale.ROOT));
@@ -94,6 +94,16 @@ public final class SkillTrees {
     public static final String ARCANE_CHAIN = "arcane_chain";
     public static final String VOID_PRESENCE = "void_presence";
     public static final String ARCANE_COMET = "arcane_comet";
+
+    // Adaga - stamina; requires a dagger in BOTH hands.
+    public static final String SWIFT_STRIKE = "swift_strike";
+    public static final String SHADOW_CUT = "shadow_cut";
+    public static final String GHOST_STEPS = "ghost_steps";
+    public static final String SHADOW_VEIL = "shadow_veil";
+    public static final String BLADE_RAIN = "blade_rain";
+    public static final String BACKSTAB = "backstab";
+    public static final String DAGGER_DANCE = "dagger_dance";
+    public static final String SHADOW_MASTER = "shadow_master";
 
     // Defesa - stamina.
     public static final String REINFORCED_LIFE = "reinforced_life";
@@ -190,6 +200,18 @@ public final class SkillTrees {
                 active(ARCANE_CHAIN, 40, 0, 240),
                 active(VOID_PRESENCE, 60, 0, 600),
                 active(ARCANE_COMET, 65, 0, 300));
+
+        // --- Adaga (dual-wield rogue tree) ---
+        branch(Tree.DAGGER, 0,
+                active(SWIFT_STRIKE, 0, 15, 40),
+                active(SHADOW_CUT, 0, 20, 80),
+                active(GHOST_STEPS, 0, 20, 300),
+                active(SHADOW_VEIL, 0, 45, 700));
+        branch(Tree.DAGGER, 1,
+                active(BLADE_RAIN, 0, 30, 200),
+                active(BACKSTAB, 0, 25, 240),
+                active(DAGGER_DANCE, 0, 40, 500),
+                passive(SHADOW_MASTER));
     }
 
     // --- Declaration helpers -------------------------------------------------

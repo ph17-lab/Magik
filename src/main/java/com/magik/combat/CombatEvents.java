@@ -2,8 +2,10 @@ package com.magik.combat;
 
 import com.magik.MagikMod;
 import com.magik.entity.MagicBoltEntity;
+import com.magik.item.Dagger;
 import com.magik.item.HeavyWeapon;
 import com.magik.item.RpgGear;
+import com.magik.skills.SkillTrees;
 import com.magik.player.PlayerRpg;
 import com.magik.player.PlayerRpgProvider;
 import com.magik.player.RpgStats;
@@ -80,9 +82,11 @@ public final class CombatEvents {
         Entity direct = source.getDirectEntity();
         boolean melee = direct == attacker;
         boolean ranged = direct instanceof Projectile && !(direct instanceof MagicBoltEntity);
+        boolean dagger = melee && attacker.getMainHandItem().getItem() instanceof Dagger;
         boolean sword = melee && attacker.getMainHandItem().getItem() instanceof SwordItem
-                && !(attacker.getMainHandItem().getItem() instanceof HeavyWeapon);
+                && !(attacker.getMainHandItem().getItem() instanceof HeavyWeapon) && !dagger;
         boolean heavy = melee && attacker.getMainHandItem().getItem() instanceof HeavyWeapon;
+        boolean forceCrit = false;
 
         if (melee) {
             amount *= RpgStats.meleeDamageMultiplier(rpg);
@@ -91,6 +95,20 @@ public final class CombatEvents {
             }
             if (sword) {
                 amount *= 1.0F + RpgStats.swordDamageBonus(rpg);
+            }
+            if (dagger) {
+                // Dual-wielding two daggers rewards the rogue with extra bite.
+                if (attacker.getOffhandItem().getItem() instanceof Dagger) {
+                    amount *= 1.15F;
+                }
+                // Shadow Veil: the first strike from stealth always crits and
+                // ends the veil.
+                if (gameTime < rpg.getShadowVeilUntil()) {
+                    forceCrit = true;
+                    rpg.setShadowVeilUntil(0L);
+                    attacker.removeEffect(MobEffects.INVISIBILITY);
+                    com.magik.combat.RpgAttributeApplier.apply(attacker, rpg);
+                }
             }
 
             // Sword Combo: escalating damage per hit while the combo is active.
@@ -133,10 +151,13 @@ public final class CombatEvents {
             amount *= RpgStats.rangedDamageMultiplier(rpg);
         }
 
-        // Precision-based critical strikes (melee and ranged alike).
-        if ((melee || ranged)
-                && attacker.getRandom().nextFloat() < RpgStats.critChance(rpg, sword, ranged)
-                        + RpgGear.heldCritBonus(attacker)) {
+        // Precision-based critical strikes (melee and ranged alike). Shadow
+        // Master lends daggers extra crit; a veiled strike always crits.
+        float critChance = RpgStats.critChance(rpg, sword, ranged) + RpgGear.heldCritBonus(attacker);
+        if (dagger && rpg.hasSkill(SkillTrees.SHADOW_MASTER)) {
+            critChance += 0.15F;
+        }
+        if ((melee || ranged) && (forceCrit || attacker.getRandom().nextFloat() < critChance)) {
             amount *= RpgStats.CRIT_MULTIPLIER;
             spawnBurst(attacker, event.getEntity(), ParticleTypes.CRIT, 12);
             attacker.level().playSound(null, event.getEntity().blockPosition(),
@@ -186,6 +207,22 @@ public final class CombatEvents {
     // ------------------------------------------------------------------
     // Other hooks
     // ------------------------------------------------------------------
+
+    /** Shadow Master: killing an enemy slips the rogue into enhanced stealth. */
+    @SubscribeEvent
+    public static void onLivingDeath(net.minecraftforge.event.entity.living.LivingDeathEvent event) {
+        if (event.getSource().getEntity() instanceof ServerPlayer killer) {
+            PlayerRpgProvider.get(killer).ifPresent(rpg -> {
+                if (rpg.hasSkill(SkillTrees.SHADOW_MASTER)
+                        && killer.getMainHandItem().getItem() instanceof Dagger) {
+                    long gameTime = killer.level().getGameTime();
+                    rpg.setStealthUntil(gameTime + 100);
+                    killer.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, 100, 0, false, false));
+                    killer.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 100, 1, false, false));
+                }
+            });
+        }
+    }
 
     /** Agility softens falls (never more than -50%). */
     @SubscribeEvent

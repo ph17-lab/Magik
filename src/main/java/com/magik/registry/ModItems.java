@@ -3,6 +3,7 @@ package com.magik.registry;
 import com.magik.MagikMod;
 import com.magik.entity.MagicBoltEntity;
 import com.magik.item.ArcaniteArmorItem;
+import com.magik.item.DaggerItem;
 import com.magik.item.HeavyWeaponItem;
 import com.magik.item.ItemRequirements;
 import com.magik.item.RpgAxeItem;
@@ -80,6 +81,16 @@ public final class ModItems {
     public static final RegistryObject<Item> CRYSTAL_BLADE = ITEMS.register("crystal_blade",
             () -> new RpgSwordItem(Tiers.DIAMOND, 3, -2.2F,
                     ItemRequirements.of(25, AGILITY, 10, PRECISION, 5), 0.10F,
+                    new Item.Properties().rarity(Rarity.RARE)));
+
+    // ------------------------------------------------------------------
+    // Daggers (rogue - meant to be dual-wielded, powers the Adaga tree)
+    // ------------------------------------------------------------------
+
+    /** Shadow Dagger: fast, light, high crit; wield one in each hand. */
+    public static final RegistryObject<Item> SHADOW_DAGGER = ITEMS.register("shadow_dagger",
+            () -> new DaggerItem(Tiers.NETHERITE, 2, 2.4F,
+                    ItemRequirements.of(8, AGILITY, 6), 0.12F,
                     new Item.Properties().rarity(Rarity.RARE)));
 
     // ------------------------------------------------------------------
