@@ -173,6 +173,56 @@ public final class SkillFx {
                 center.x, center.y, center.z, 1, 0.0D, 0.0D, 0.0D, 0.0D);
     }
 
+    /** A jagged energy line between two points (chains, chaos rays). */
+    public static void jaggedLine(ServerLevel level, Vec3 from, Vec3 to,
+                                  Vector3f colorA, Vector3f colorB) {
+        RandomSource random = level.random;
+        double length = from.distanceTo(to);
+        int segments = Math.max(4, (int) (length * 2.5D));
+        Vec3 previous = from;
+        for (int i = 1; i <= segments; i++) {
+            Vec3 point = from.lerp(to, i / (double) segments);
+            if (i < segments) {
+                point = point.add((random.nextDouble() - 0.5D) * 0.5D,
+                        (random.nextDouble() - 0.5D) * 0.5D,
+                        (random.nextDouble() - 0.5D) * 0.5D);
+            }
+            int dots = 2;
+            for (int d = 0; d < dots; d++) {
+                Vec3 dot = previous.lerp(point, d / (double) dots);
+                level.sendParticles(new DustParticleOptions((i + d) % 2 == 0 ? colorA : colorB, 1.2F),
+                        dot.x, dot.y, dot.z, 1, 0.0D, 0.0D, 0.0D, 0.0D);
+            }
+            previous = point;
+        }
+    }
+
+    /** A straight beam of dust between two points (lances, blades). */
+    public static void beam(ServerLevel level, Vec3 from, Vec3 to,
+                            Vector3f colorA, Vector3f colorB, float size) {
+        double length = from.distanceTo(to);
+        int points = Math.max(6, (int) (length * 3.0D));
+        for (int i = 0; i <= points; i++) {
+            Vec3 point = from.lerp(to, i / (double) points);
+            level.sendParticles(new DustParticleOptions(i % 2 == 0 ? colorA : colorB, size),
+                    point.x, point.y, point.z, 1, 0.02D, 0.02D, 0.02D, 0.0D);
+        }
+    }
+
+    /** An inward swirl on the ground - gravity wells and rifts. */
+    public static void swirl(ServerLevel level, Vec3 center, double radius,
+                             Vector3f colorA, Vector3f colorB) {
+        for (int i = 0; i < 24; i++) {
+            double progress = i / 24.0D;
+            double theta = progress * Math.PI * 3.0D;
+            double r = radius * (1.0D - progress * 0.8D);
+            Vec3 pos = center.add(Math.cos(theta) * r, 0.15D + progress * 0.5D, Math.sin(theta) * r);
+            Vec3 inward = center.subtract(pos).normalize();
+            level.sendParticles(new DustParticleOptions(i % 2 == 0 ? colorA : colorB, 1.2F),
+                    pos.x, pos.y, pos.z, 0, inward.x, 0.05D, inward.z, 0.25D);
+        }
+    }
+
     /** A green barrier dome projected in front of a blocking player. */
     public static void guardDome(ServerLevel level, ServerPlayer player) {
         double yaw = Math.toRadians(player.getYRot());

@@ -39,7 +39,7 @@ public final class MagikServerConfig {
 
         b.push("progression");
         MAX_LEVEL = b.comment("Maximum RPG level a player can reach.")
-                .defineInRange("maxLevel", 100, 1, 10000);
+                .defineInRange("maxLevel", 150, 1, 10000);
         XP_CURVE_BASE = b.comment("XP required to go from level L to L+1 is: base * L ^ exponent.",
                         "Low levels stay fast while high levels become much more demanding.")
                 .defineInRange("xpCurveBase", 80.0D, 1.0D, 100000.0D);

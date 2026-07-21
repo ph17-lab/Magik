@@ -49,6 +49,7 @@ public final class PlayerTitles {
         }
         return switch (dominant) {
             case ARCANE -> veteran ? "archmage" : "mage";
+            case ADVANCED_ARCANE -> "advanced_arcanist";
             case ARCHER -> "master_archer";
             case DEFENSE -> "guardian";
             case SWORDSMAN, HEAVY -> veteran ? "knight" : "warrior";

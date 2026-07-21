@@ -41,8 +41,9 @@ public final class ModCreativeTabs {
                         output.accept(ModItems.DIAMOND_SHIELD.get());
                         output.accept(ModItems.OBSIDIAN_SHIELD.get());
                         output.accept(ModItems.LEGENDARY_SHIELD.get());
-                        // Staff
+                        // Staves
                         output.accept(ModItems.STAFF.get());
+                        output.accept(ModItems.ADVANCED_STAFF.get());
                         // Armor
                         output.accept(ModItems.ARCANITE_HELMET.get());
                         output.accept(ModItems.ARCANITE_CHESTPLATE.get());

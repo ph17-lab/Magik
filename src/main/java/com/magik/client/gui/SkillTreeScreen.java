@@ -53,6 +53,7 @@ public class SkillTreeScreen extends Screen {
             case ARCHER -> 0xFF5BBF3F;
             case HEAVY -> 0xFFC9862E;
             case DEFENSE -> 0xFFE3C55A;
+            case ADVANCED_ARCANE -> 0xFF8A2BE2;
         };
     }
 
@@ -78,7 +79,7 @@ public class SkillTreeScreen extends Screen {
         knownUnlocked.clear();
         knownUnlocked.addAll(ClientRpgData.get().getUnlockedSkills());
 
-        int tabWidth = 76;
+        int tabWidth = 64;
         int totalWidth = SkillTrees.Tree.values().length * (tabWidth + 2) - 2;
         int x = (width - totalWidth) / 2;
         for (SkillTrees.Tree tree : SkillTrees.Tree.values()) {
@@ -120,7 +121,10 @@ public class SkillTreeScreen extends Screen {
     }
 
     private double nodeWorldX(Skill skill) {
-        return (skill.getBranch() == 0 ? -BRANCH_OFFSET_X : BRANCH_OFFSET_X) - NODE_SIZE / 2.0D;
+        // Branches spread symmetrically around the center (works for any count).
+        int branches = SkillTrees.branchCount(skill.getTree());
+        double spacing = BRANCH_OFFSET_X * 2.0D;
+        return (skill.getBranch() - (branches - 1) / 2.0D) * spacing - NODE_SIZE / 2.0D;
     }
 
     private double nodeWorldY(Skill skill) {
@@ -289,6 +293,15 @@ public class SkillTreeScreen extends Screen {
         boolean levelMet = rpg.getLevel() >= skill.getRequiredLevel();
         lines.add(Component.translatable("tooltip.magik.requires_level", skill.getRequiredLevel())
                 .withStyle(levelMet ? ChatFormatting.DARK_GREEN : ChatFormatting.RED));
+        if (skill.getTree() == SkillTrees.Tree.ADVANCED_ARCANE) {
+            boolean intMet = rpg.getAttribute(com.magik.player.RpgAttribute.INTELLIGENCE)
+                    >= SkillTrees.ADVANCED_ARCANE_INTELLIGENCE;
+            lines.add(Component.translatable("tooltip.magik.requires_intelligence",
+                            SkillTrees.ADVANCED_ARCANE_INTELLIGENCE)
+                    .withStyle(intMet ? ChatFormatting.DARK_GREEN : ChatFormatting.RED));
+            lines.add(Component.translatable("tooltip.magik.requires_staff")
+                    .withStyle(ChatFormatting.DARK_PURPLE));
+        }
         if (skill.getPrerequisite() != null) {
             Skill prerequisite = SkillTrees.get(skill.getPrerequisite());
             if (prerequisite != null) {

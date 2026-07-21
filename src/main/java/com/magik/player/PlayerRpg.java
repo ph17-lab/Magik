@@ -61,6 +61,9 @@ public class PlayerRpg {
     private long parryUntil;
     private long riposteUntil;
     private long weaponSummonUntil;
+    private long floatingSpheresUntil;
+    private long voidPresenceUntil;
+    private boolean advancedStaffGranted;
     private long lastCombatTime;
     private ArrowEffect nextArrowEffect = ArrowEffect.NONE;
     private long nextArrowUntil;
@@ -281,6 +284,31 @@ public class PlayerRpg {
         this.weaponSummonUntil = until;
     }
 
+    public long getFloatingSpheresUntil() {
+        return floatingSpheresUntil;
+    }
+
+    public void setFloatingSpheresUntil(long until) {
+        this.floatingSpheresUntil = until;
+    }
+
+    public long getVoidPresenceUntil() {
+        return voidPresenceUntil;
+    }
+
+    public void setVoidPresenceUntil(long until) {
+        this.voidPresenceUntil = until;
+    }
+
+    /** One-time reward flag: the Advanced Arcane staff granted at Intelligence 50. */
+    public boolean isAdvancedStaffGranted() {
+        return advancedStaffGranted;
+    }
+
+    public void setAdvancedStaffGranted(boolean granted) {
+        this.advancedStaffGranted = granted;
+    }
+
     public long getLastCombatTime() {
         return lastCombatTime;
     }
@@ -337,6 +365,7 @@ public class PlayerRpg {
             slotsTag.add(StringTag.valueOf(slot == null ? "" : slot));
         }
         tag.put("Slots", slotsTag);
+        tag.putBoolean("AdvStaffGranted", advancedStaffGranted);
         return tag;
     }
 
@@ -369,6 +398,7 @@ public class PlayerRpg {
             String value = i < slotsTag.size() ? slotsTag.getString(i) : "";
             skillSlots[i] = value.isEmpty() ? null : value;
         }
+        advancedStaffGranted = tag.getBoolean("AdvStaffGranted");
     }
 
     /** Copies persistent progress from another instance (used on death/clone). */

@@ -130,6 +130,33 @@ public final class RpgEvents {
                 SkillCasting.tickWeaponSummon(player, rpg, gameTime);
             }
 
+            // Advanced Arcane auras.
+            if (gameTime < rpg.getFloatingSpheresUntil()) {
+                SkillCasting.tickFloatingSpheres(player, rpg, gameTime);
+            }
+            if (gameTime < rpg.getVoidPresenceUntil()) {
+                SkillCasting.tickVoidPresence(player, rpg, gameTime);
+            }
+
+            // Becoming an Advanced Arcanist (Intelligence 50) grants the
+            // purple-and-black Advanced Staff, once.
+            if (!rpg.isAdvancedStaffGranted() && gameTime % 40 == 0
+                    && rpg.getAttribute(RpgAttribute.INTELLIGENCE)
+                    >= SkillTrees.ADVANCED_ARCANE_INTELLIGENCE) {
+                rpg.setAdvancedStaffGranted(true);
+                ItemStack reward = new ItemStack(com.magik.registry.ModItems.ADVANCED_STAFF.get());
+                if (!player.getInventory().add(reward)) {
+                    player.drop(reward, false);
+                }
+                player.displayClientMessage(
+                        net.minecraft.network.chat.Component.translatable(
+                                "message.magik.advanced_staff_granted"), false);
+                player.level().playSound(null, player.blockPosition(),
+                        SoundEvents.TOTEM_USE, SoundSource.PLAYERS, 0.8F, 1.4F);
+                SkillFx.helix((ServerLevel) player.level(), player,
+                        SkillFx.ARCANE_A, SkillFx.ARCANE_B);
+            }
+
             // Active guard: blocking with an RPG shield projects a green
             // barrier and drains stamina; when it empties the guard breaks.
             if (player.isBlocking() && player.getUseItem().getItem() instanceof RpgShieldItem) {
@@ -156,6 +183,14 @@ public final class RpgEvents {
                 MagikNetwork.syncVitals(player, rpg);
             }
         });
+    }
+
+    /** Ticks the Dimensional Rift zones on every server level tick. */
+    @SubscribeEvent
+    public static void onLevelTick(TickEvent.LevelTickEvent event) {
+        if (event.phase == TickEvent.Phase.END && event.level instanceof ServerLevel serverLevel) {
+            SkillCasting.tickRifts(serverLevel);
+        }
     }
 
     /** Restores mana from consumables; clamped to the player's maximum. */

@@ -44,15 +44,23 @@ public class StaffItem extends Item implements RpgGear, GeoItem {
 
     // GeckoLib: the staff renders from a Bedrock .geo.json model.
     private final AnimatableInstanceCache geckoCache = GeckoLibUtil.createInstanceCache(this);
+    private final net.minecraft.resources.ResourceLocation geoTexture;
 
     public StaffItem(MagicBoltEntity.Variant variant, float baseDamage, float baseManaCost,
-                     int castCooldownTicks, ItemRequirements requirements, Properties properties) {
+                     int castCooldownTicks, ItemRequirements requirements,
+                     net.minecraft.resources.ResourceLocation geoTexture, Properties properties) {
         super(properties);
         this.variant = variant;
         this.baseDamage = baseDamage;
         this.baseManaCost = baseManaCost;
         this.castCooldownTicks = castCooldownTicks;
         this.requirements = requirements;
+        this.geoTexture = geoTexture;
+    }
+
+    /** Texture applied to the shared staff geometry by the GeckoLib model. */
+    public net.minecraft.resources.ResourceLocation getGeoTexture() {
+        return geoTexture;
     }
 
     @Override
@@ -108,7 +116,8 @@ public class StaffItem extends Item implements RpgGear, GeoItem {
             return InteractionResultHolder.fail(stack);
         }
 
-        float damage = baseDamage * RpgStats.magicDamageMultiplier(rpg);
+        float damage = baseDamage * RpgStats.magicDamageMultiplier(rpg)
+                * com.magik.skills.SkillCasting.voidBonus(rpg, level.getGameTime());
         MagicBoltEntity bolt = new MagicBoltEntity(level, serverPlayer, damage, variant);
         bolt.shootFromRotation(serverPlayer, serverPlayer.getXRot(), serverPlayer.getYRot(), 0.0F, 2.0F, 0.6F);
         level.addFreshEntity(bolt);

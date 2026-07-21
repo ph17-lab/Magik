@@ -26,14 +26,17 @@ import java.util.stream.Collectors;
  */
 public final class SkillTrees {
 
-    /** The five archetype trees of the free class system. */
+    /** The archetype trees of the free class system. */
     public enum Tree {
-        ARCANE, SWORDSMAN, ARCHER, HEAVY, DEFENSE;
+        ARCANE, SWORDSMAN, ARCHER, HEAVY, DEFENSE, ADVANCED_ARCANE;
 
         public Component getDisplayName() {
             return Component.translatable("skilltree.magik." + name().toLowerCase(Locale.ROOT));
         }
     }
+
+    /** Intelligence needed to invest in the Advanced Arcane tree. */
+    public static final int ADVANCED_ARCANE_INTELLIGENCE = 50;
 
     // Arcano - all actives, all mana.
     public static final String FIREBALL = "fireball";
@@ -74,6 +77,23 @@ public final class SkillTrees {
     public static final String SHIELD_BREAK = "shield_break";
     public static final String STUNNING_BLOWS = "stunning_blows";
     public static final String AREA_STRIKE = "area_strike";
+
+    // Arcano Avançado - the staff attacks board; needs Intelligence 50 and a staff in hand.
+    public static final String SHADOW_ORB = "shadow_orb";
+    public static final String ARCANE_LANCE = "arcane_lance";
+    public static final String ETHEREAL_EXPLOSION = "ethereal_explosion";
+    public static final String METEOR_SHOWER = "meteor_shower";
+    public static final String ARCANE_BARRIER = "arcane_barrier";
+    public static final String FLOATING_SPHERES = "floating_spheres";
+    public static final String CHAOS_RAY = "chaos_ray";
+    public static final String GRAVITY_NOVA = "gravity_nova";
+    public static final String DIMENSIONAL_RIFT = "dimensional_rift";
+    public static final String OFFENSIVE_TELEPORT = "offensive_teleport";
+    public static final String ARCANE_BLADES = "arcane_blades";
+    public static final String NULLIFICATION_FIELD = "nullification_field";
+    public static final String ARCANE_CHAIN = "arcane_chain";
+    public static final String VOID_PRESENCE = "void_presence";
+    public static final String ARCANE_COMET = "arcane_comet";
 
     // Defesa - stamina.
     public static final String REINFORCED_LIFE = "reinforced_life";
@@ -150,6 +170,26 @@ public final class SkillTrees {
                 passive(FIRE_RESISTANCE),
                 passive(BLAST_RESISTANCE),
                 active(PROTECTIVE_SHIELD, 0, 50, 800));
+
+        // --- Arcano Avançado (the "Arcano - todos os ataques" board) ---
+        branch(Tree.ADVANCED_ARCANE, 0,
+                active(SHADOW_ORB, 35, 0, 160),
+                active(ARCANE_LANCE, 30, 0, 120),
+                active(ETHEREAL_EXPLOSION, 45, 0, 240),
+                active(METEOR_SHOWER, 70, 0, 600),
+                active(ARCANE_BARRIER, 50, 0, 600));
+        branch(Tree.ADVANCED_ARCANE, 1,
+                active(FLOATING_SPHERES, 55, 0, 500),
+                active(CHAOS_RAY, 40, 0, 200),
+                active(GRAVITY_NOVA, 45, 0, 300),
+                active(DIMENSIONAL_RIFT, 60, 0, 400),
+                active(OFFENSIVE_TELEPORT, 35, 0, 200));
+        branch(Tree.ADVANCED_ARCANE, 2,
+                active(ARCANE_BLADES, 40, 0, 220),
+                active(NULLIFICATION_FIELD, 45, 0, 400),
+                active(ARCANE_CHAIN, 40, 0, 240),
+                active(VOID_PRESENCE, 60, 0, 600),
+                active(ARCANE_COMET, 65, 0, 300));
     }
 
     // --- Declaration helpers -------------------------------------------------
@@ -208,12 +248,27 @@ public final class SkillTrees {
         return count;
     }
 
+    /** Number of branches (columns) a tree lays its skills across. */
+    public static int branchCount(Tree tree) {
+        int max = 0;
+        for (Skill skill : SKILLS.values()) {
+            if (skill.getTree() == tree) {
+                max = Math.max(max, skill.getBranch());
+            }
+        }
+        return max + 1;
+    }
+
     /** Server-authoritative check whether a player may unlock a skill right now. */
     public static boolean canUnlock(PlayerRpg rpg, Skill skill) {
         if (rpg.hasSkill(skill.getId()) || rpg.getSkillPoints() <= 0) {
             return false;
         }
         if (rpg.getLevel() < skill.getRequiredLevel()) {
+            return false;
+        }
+        if (skill.getTree() == Tree.ADVANCED_ARCANE
+                && rpg.getAttribute(com.magik.player.RpgAttribute.INTELLIGENCE) < ADVANCED_ARCANE_INTELLIGENCE) {
             return false;
         }
         return skill.getPrerequisite() == null || rpg.hasSkill(skill.getPrerequisite());

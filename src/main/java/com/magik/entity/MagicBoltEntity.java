@@ -55,6 +55,11 @@ public class MagicBoltEntity extends ThrowableItemProjectile {
 
     /** Server-side only; the projectile dies on first hit, so no need to sync. */
     private float damage = 5.0F;
+    /** Steers toward the nearest enemy when set (Orbe das Sombras). */
+    private boolean homing;
+    /** Splash damage radius on impact; 0 disables (Cometa/Meteoros). */
+    private float aoeRadius;
+    private Entity lastDirectHit;
 
     public MagicBoltEntity(EntityType<? extends MagicBoltEntity> type, Level level) {
         super(type, level);
@@ -77,6 +82,16 @@ public class MagicBoltEntity extends ThrowableItemProjectile {
         return Variant.values()[Math.floorMod(ordinal, Variant.values().length)];
     }
 
+    public MagicBoltEntity homing() {
+        this.homing = true;
+        return this;
+    }
+
+    public MagicBoltEntity withAoe(float radius) {
+        this.aoeRadius = radius;
+        return this;
+    }
+
     @Override
     protected Item getDefaultItem() {
         return ModItems.MANA_CRYSTAL.get();
@@ -87,9 +102,41 @@ public class MagicBoltEntity extends ThrowableItemProjectile {
         super.tick();
         if (level().isClientSide) {
             spawnTrail();
-        } else if (tickCount > 100) {
-            discard(); // Never let stray bolts live forever.
+            return;
         }
+        if (tickCount > 100) {
+            discard(); // Never let stray bolts live forever.
+            return;
+        }
+        if (homing) {
+            steerTowardsPrey();
+        }
+    }
+
+    /** Gently curves the orb toward the nearest living target in range. */
+    private void steerTowardsPrey() {
+        LivingEntity prey = level().getEntitiesOfClass(LivingEntity.class,
+                        getBoundingBox().inflate(10.0D),
+                        e -> e != getOwner() && e.isAlive() && hasLineOfSight(e))
+                .stream()
+                .min(java.util.Comparator.comparingDouble(this::distanceToSqr))
+                .orElse(null);
+        if (prey == null) {
+            return;
+        }
+        Vec3 toPrey = prey.position().add(0.0D, prey.getBbHeight() * 0.5D, 0.0D)
+                .subtract(position()).normalize();
+        double speed = Math.max(0.6D, getDeltaMovement().length());
+        setDeltaMovement(getDeltaMovement().scale(0.7D).add(toPrey.scale(speed * 0.3D))
+                .normalize().scale(speed));
+    }
+
+    private boolean hasLineOfSight(LivingEntity target) {
+        return level().clip(new net.minecraft.world.level.ClipContext(position(),
+                        target.position().add(0.0D, target.getBbHeight() * 0.5D, 0.0D),
+                        net.minecraft.world.level.ClipContext.Block.COLLIDER,
+                        net.minecraft.world.level.ClipContext.Fluid.NONE, this))
+                .getType() == HitResult.Type.MISS;
     }
 
     /**
@@ -139,6 +186,7 @@ public class MagicBoltEntity extends ThrowableItemProjectile {
             return;
         }
         Entity target = result.getEntity();
+        lastDirectHit = target;
         target.hurt(damageSources().indirectMagic(this, getOwner()), damage);
         switch (getVariant()) {
             case FIRE -> target.setSecondsOnFire(4);
@@ -181,6 +229,15 @@ public class MagicBoltEntity extends ThrowableItemProjectile {
     protected void onHit(HitResult result) {
         super.onHit(result);
         if (!level().isClientSide) {
+            if (aoeRadius > 0.0F && level() instanceof ServerLevel serverLevel) {
+                for (LivingEntity nearby : serverLevel.getEntitiesOfClass(LivingEntity.class,
+                        getBoundingBox().inflate(aoeRadius),
+                        e -> e != getOwner() && e != lastDirectHit && e.isAlive())) {
+                    nearby.hurt(damageSources().indirectMagic(this, getOwner()), damage * 0.75F);
+                }
+                serverLevel.sendParticles(ParticleTypes.EXPLOSION,
+                        getX(), getY(), getZ(), 2, aoeRadius * 0.3D, 0.2D, aoeRadius * 0.3D, 0.0D);
+            }
             impactBurst(result.getLocation());
             discard();
         }

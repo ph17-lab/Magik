@@ -10,8 +10,6 @@ public class StaffModel extends GeoModel<StaffItem> {
 
     private static final ResourceLocation GEO =
             new ResourceLocation(MagikMod.MOD_ID, "geo/staff.geo.json");
-    private static final ResourceLocation TEXTURE =
-            new ResourceLocation(MagikMod.MOD_ID, "textures/item/staff.png");
     private static final ResourceLocation ANIMATIONS =
             new ResourceLocation(MagikMod.MOD_ID, "animations/staff.animation.json");
 
@@ -22,7 +20,7 @@ public class StaffModel extends GeoModel<StaffItem> {
 
     @Override
     public ResourceLocation getTextureResource(StaffItem item) {
-        return TEXTURE;
+        return item.getGeoTexture();
     }
 
     @Override

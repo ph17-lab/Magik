@@ -24,6 +24,7 @@ import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.projectile.Arrow;
+import net.minecraft.util.Mth;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
@@ -31,6 +32,7 @@ import net.minecraft.world.phys.Vec3;
 
 import java.util.List;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 /**
  * Server-side execution of every active skill. All costs, cooldowns and
@@ -58,6 +60,12 @@ public final class SkillCasting {
 
         long gameTime = player.level().getGameTime();
         if (rpg.isOnCooldown(skillId, gameTime)) {
+            return;
+        }
+
+        // Advanced Arcane spells are the staff's attack kit: a staff must be in hand.
+        if (skill.getTree() == SkillTrees.Tree.ADVANCED_ARCANE && !holdingStaff(player)) {
+            player.displayClientMessage(Component.translatable("message.magik.need_staff"), true);
             return;
         }
 
@@ -143,8 +151,47 @@ public final class SkillCasting {
             case SkillTrees.PROTECTIVE_SHIELD -> castAbsorption(player, 2, 600,
                     SkillFx.DEFENSE_A, SkillFx.DEFENSE_B, SoundEvents.BEACON_ACTIVATE);
 
+            // --- Arcano Avançado ---
+            case SkillTrees.SHADOW_ORB -> castShadowOrb(player, rpg);
+            case SkillTrees.ARCANE_LANCE -> castArcaneLance(player, rpg);
+            case SkillTrees.ETHEREAL_EXPLOSION -> castEtherealExplosion(player, rpg);
+            case SkillTrees.METEOR_SHOWER -> castMeteorShower(player, rpg);
+            case SkillTrees.ARCANE_BARRIER -> castArcaneBarrier(player);
+            case SkillTrees.FLOATING_SPHERES -> {
+                rpg.setFloatingSpheresUntil(gameTime + 400);
+                SkillFx.ring(level(player), player.position().add(0.0D, 1.4D, 0.0D), 1.2D,
+                        SkillFx.ARCANE_A, SkillFx.ARCANE_B, 1.2F, 0.1D);
+                playSound(player, SoundEvents.EVOKER_CAST_SPELL, 1.3F);
+                yield true;
+            }
+            case SkillTrees.CHAOS_RAY -> castChaosRay(player, rpg);
+            case SkillTrees.GRAVITY_NOVA -> castGravityNova(player, rpg);
+            case SkillTrees.DIMENSIONAL_RIFT -> castDimensionalRift(player, rpg);
+            case SkillTrees.OFFENSIVE_TELEPORT -> castOffensiveTeleport(player, rpg);
+            case SkillTrees.ARCANE_BLADES -> castArcaneBlades(player, rpg);
+            case SkillTrees.NULLIFICATION_FIELD -> castNullificationField(player);
+            case SkillTrees.ARCANE_CHAIN -> castArcaneChain(player, rpg);
+            case SkillTrees.VOID_PRESENCE -> {
+                rpg.setVoidPresenceUntil(gameTime + 300);
+                SkillFx.sphereBurst(level(player), player.position().add(0.0D, 1.0D, 0.0D),
+                        SkillFx.ARCANE_B, SkillFx.ARCANE_A, 32, 0.2D);
+                playSound(player, SoundEvents.WITHER_SPAWN, 1.8F);
+                yield true;
+            }
+            case SkillTrees.ARCANE_COMET -> castArcaneComet(player, rpg);
+
             default -> false;
         };
+    }
+
+    private static boolean holdingStaff(ServerPlayer player) {
+        return player.getMainHandItem().getItem() instanceof com.magik.item.StaffItem
+                || player.getOffhandItem().getItem() instanceof com.magik.item.StaffItem;
+    }
+
+    /** Void Presence: +30% spell damage while the buff is active. */
+    public static float voidBonus(PlayerRpg rpg, long gameTime) {
+        return gameTime < rpg.getVoidPresenceUntil() ? 1.3F : 1.0F;
     }
 
     // ------------------------------------------------------------------
@@ -153,7 +200,8 @@ public final class SkillCasting {
 
     private static boolean shootBolt(ServerPlayer player, PlayerRpg rpg, float baseDamage,
                                      MagicBoltEntity.Variant variant, SoundEvent sound, float pitch) {
-        float damage = baseDamage * RpgStats.magicDamageMultiplier(rpg);
+        float damage = baseDamage * RpgStats.magicDamageMultiplier(rpg)
+                * voidBonus(rpg, player.level().getGameTime());
         MagicBoltEntity bolt = new MagicBoltEntity(player.level(), player, damage, variant);
         bolt.shootFromRotation(player, player.getXRot(), player.getYRot(), 0.0F, 1.6F, 0.5F);
         player.level().addFreshEntity(bolt);
@@ -398,6 +446,410 @@ public final class SkillCasting {
         SkillFx.slashArc(level(player), player, 1.2D, SkillFx.ARCHER_A, SkillFx.ARCHER_B);
         playSound(player, SoundEvents.ARROW_SHOOT, 0.9F);
         return true;
+    }
+
+    // ------------------------------------------------------------------
+    // Arcano Avançado (staff attack kit)
+    // ------------------------------------------------------------------
+
+    /** Orbe das Sombras: slow homing orb that explodes in an area. */
+    private static boolean castShadowOrb(ServerPlayer player, PlayerRpg rpg) {
+        long gameTime = player.level().getGameTime();
+        float damage = 8.0F * RpgStats.magicDamageMultiplier(rpg) * voidBonus(rpg, gameTime);
+        MagicBoltEntity orb = new MagicBoltEntity(player.level(), player, damage,
+                MagicBoltEntity.Variant.ARCANE).homing().withAoe(3.0F);
+        orb.shootFromRotation(player, player.getXRot(), player.getYRot(), 0.0F, 0.9F, 0.3F);
+        player.level().addFreshEntity(orb);
+        playSound(player, SoundEvents.WITHER_SHOOT, 1.6F);
+        return true;
+    }
+
+    /** Lança Arcana: an instant piercing beam that damages EVERYTHING in its path. */
+    private static boolean castArcaneLance(ServerPlayer player, PlayerRpg rpg) {
+        long gameTime = player.level().getGameTime();
+        float damage = 9.0F * RpgStats.magicDamageMultiplier(rpg) * voidBonus(rpg, gameTime);
+        ServerLevel level = level(player);
+        Vec3 start = player.getEyePosition();
+        Vec3 end = rayTarget(player, 14.0D);
+
+        int hits = 0;
+        for (LivingEntity target : level.getEntitiesOfClass(LivingEntity.class,
+                new AABB(start, end).inflate(1.0D), hostileTo(player))) {
+            Vec3 center = target.position().add(0.0D, target.getBbHeight() * 0.5D, 0.0D);
+            if (distanceToSegment(center, start, end) <= 1.2D) {
+                target.hurt(player.damageSources().indirectMagic(player, player), damage);
+                hits++;
+            }
+        }
+        SkillFx.beam(level, start.add(player.getLookAngle().scale(0.8D)), end,
+                SkillFx.ARCANE_A, SkillFx.ARCANE_B, 1.5F);
+        level.sendParticles(ParticleTypes.END_ROD, end.x, end.y, end.z, 8, 0.2D, 0.2D, 0.2D, 0.1D);
+        playSound(player, SoundEvents.SHULKER_SHOOT, 1.5F);
+        return hits >= 0;
+    }
+
+    /** Explosão Etérea: an energy burst that hurls enemies away. */
+    private static boolean castEtherealExplosion(ServerPlayer player, PlayerRpg rpg) {
+        long gameTime = player.level().getGameTime();
+        float damage = 8.0F * RpgStats.magicDamageMultiplier(rpg) * voidBonus(rpg, gameTime);
+        ServerLevel level = level(player);
+        for (LivingEntity target : level.getEntitiesOfClass(LivingEntity.class,
+                new AABB(player.blockPosition()).inflate(5.0D), hostileTo(player))) {
+            target.hurt(player.damageSources().indirectMagic(player, player), damage);
+            Vec3 push = target.position().subtract(player.position()).normalize()
+                    .scale(1.6D).add(0.0D, 0.5D, 0.0D);
+            target.setDeltaMovement(push);
+            target.hurtMarked = true;
+        }
+        SkillFx.shockwave(level, player.position(), 5.0D, SkillFx.ARCANE_A, SkillFx.ARCANE_B);
+        SkillFx.sphereBurst(level, player.position().add(0.0D, 1.0D, 0.0D),
+                SkillFx.ARCANE_A, SkillFx.ARCANE_B, 40, 0.55D);
+        level.sendParticles(ParticleTypes.FLASH,
+                player.getX(), player.getY(1.0D), player.getZ(), 1, 0.0D, 0.0D, 0.0D, 0.0D);
+        playSound(player, SoundEvents.GENERIC_EXPLODE, 1.4F);
+        return true;
+    }
+
+    /** Chuva de Meteoros: purple meteors rain over the aimed area. */
+    private static boolean castMeteorShower(ServerPlayer player, PlayerRpg rpg) {
+        long gameTime = player.level().getGameTime();
+        float damage = 7.0F * RpgStats.magicDamageMultiplier(rpg) * voidBonus(rpg, gameTime);
+        Vec3 target = rayTarget(player, 20.0D);
+        ServerLevel level = level(player);
+        for (int i = 0; i < 8; i++) {
+            double ox = (player.getRandom().nextDouble() - 0.5D) * 10.0D;
+            double oz = (player.getRandom().nextDouble() - 0.5D) * 10.0D;
+            MagicBoltEntity meteor = new MagicBoltEntity(level, player, damage,
+                    MagicBoltEntity.Variant.SUPREME).withAoe(2.5F);
+            meteor.setPos(target.x + ox, target.y + 14.0D + player.getRandom().nextDouble() * 4.0D,
+                    target.z + oz);
+            meteor.setDeltaMovement((player.getRandom().nextDouble() - 0.5D) * 0.15D, -1.3D,
+                    (player.getRandom().nextDouble() - 0.5D) * 0.15D);
+            level.addFreshEntity(meteor);
+        }
+        playSound(player, SoundEvents.DRAGON_FIREBALL_EXPLODE, 0.7F);
+        return true;
+    }
+
+    /** Barreira Arcana: blocks and absorbs incoming damage for a while. */
+    private static boolean castArcaneBarrier(ServerPlayer player) {
+        player.addEffect(new MobEffectInstance(MobEffects.ABSORPTION, 600, 3));
+        player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 300, 1));
+        SkillFx.helix(level(player), player, SkillFx.ARCANE_A, SkillFx.ARCANE_B);
+        SkillFx.ring(level(player), player.position().add(0.0D, 0.1D, 0.0D), 1.6D,
+                SkillFx.ARCANE_A, SkillFx.ARCANE_B, 1.4F, 0.05D);
+        playSound(player, SoundEvents.BEACON_ACTIVATE, 0.8F);
+        return true;
+    }
+
+    /** Esferas Flutuantes tick: three orbs orbit the caster and zap enemies. */
+    public static void tickFloatingSpheres(ServerPlayer player, PlayerRpg rpg, long gameTime) {
+        ServerLevel level = level(player);
+        if (gameTime % 2 == 0) {
+            for (int i = 0; i < 3; i++) {
+                Vec3 orb = spherePosition(player, gameTime, i);
+                level.sendParticles(new DustParticleOptions(SkillFx.ARCANE_A, 1.5F),
+                        orb.x, orb.y, orb.z, 1, 0.04D, 0.04D, 0.04D, 0.0D);
+                level.sendParticles(new DustParticleOptions(SkillFx.ARCANE_B, 0.9F),
+                        orb.x, orb.y, orb.z, 1, 0.1D, 0.1D, 0.1D, 0.0D);
+            }
+        }
+        if (gameTime % 25 != 0) {
+            return;
+        }
+        float damage = 3.5F * RpgStats.magicDamageMultiplier(rpg) * voidBonus(rpg, gameTime);
+        List<LivingEntity> targets = level.getEntitiesOfClass(LivingEntity.class,
+                new AABB(player.blockPosition()).inflate(6.0D), hostileTo(player));
+        if (!targets.isEmpty()) {
+            LivingEntity target = targets.get(player.getRandom().nextInt(targets.size()));
+            Vec3 orb = spherePosition(player, gameTime, player.getRandom().nextInt(3));
+            target.hurt(player.damageSources().indirectMagic(player, player), damage);
+            SkillFx.jaggedLine(level, orb,
+                    target.position().add(0.0D, target.getBbHeight() * 0.5D, 0.0D),
+                    SkillFx.ARCANE_A, SkillFx.ARCANE_B);
+            level.playSound(null, target.blockPosition(),
+                    SoundEvents.AMETHYST_BLOCK_HIT, SoundSource.PLAYERS, 0.7F, 1.6F);
+        }
+    }
+
+    private static Vec3 spherePosition(ServerPlayer player, long gameTime, int index) {
+        double theta = gameTime * 0.12D + index * (Math.PI * 2.0D / 3.0D);
+        return player.position().add(Math.cos(theta) * 1.5D,
+                1.4D + Math.sin(gameTime * 0.08D + index) * 0.25D, Math.sin(theta) * 1.5D);
+    }
+
+    /** Raio do Caos: a chaotic bolt that arcs between up to five enemies. */
+    private static boolean castChaosRay(ServerPlayer player, PlayerRpg rpg) {
+        long gameTime = player.level().getGameTime();
+        float damage = 10.0F * RpgStats.magicDamageMultiplier(rpg) * voidBonus(rpg, gameTime);
+        ServerLevel level = level(player);
+        Vec3 start = player.getEyePosition();
+        Vec3 reach = rayTarget(player, 16.0D);
+
+        LivingEntity first = level.getEntitiesOfClass(LivingEntity.class,
+                        new AABB(start, reach).inflate(1.5D), hostileTo(player)).stream()
+                .filter(e -> distanceToSegment(e.position().add(0.0D, e.getBbHeight() * 0.5D, 0.0D),
+                        start, reach) <= 1.5D)
+                .min(java.util.Comparator.comparingDouble(e -> e.distanceToSqr(player)))
+                .orElse(null);
+        if (first == null) {
+            SkillFx.jaggedLine(level, start.add(player.getLookAngle().scale(0.8D)), reach,
+                    SkillFx.LIGHTNING_A, SkillFx.ARCANE_A);
+            playSound(player, SoundEvents.LIGHTNING_BOLT_IMPACT, 1.8F);
+            return true;
+        }
+
+        java.util.Set<LivingEntity> struck = new java.util.HashSet<>();
+        LivingEntity current = first;
+        Vec3 from = start.add(player.getLookAngle().scale(0.8D));
+        float chainDamage = damage;
+        for (int jump = 0; jump < 5 && current != null; jump++) {
+            Vec3 hitPoint = current.position().add(0.0D, current.getBbHeight() * 0.5D, 0.0D);
+            current.hurt(player.damageSources().indirectMagic(player, player), chainDamage);
+            SkillFx.jaggedLine(level, from, hitPoint, SkillFx.LIGHTNING_A, SkillFx.ARCANE_A);
+            level.sendParticles(ParticleTypes.ELECTRIC_SPARK,
+                    hitPoint.x, hitPoint.y, hitPoint.z, 10, 0.3D, 0.3D, 0.3D, 0.2D);
+            struck.add(current);
+            from = hitPoint;
+            chainDamage *= 0.7F;
+            LivingEntity previous = current;
+            current = level.getEntitiesOfClass(LivingEntity.class,
+                            previous.getBoundingBox().inflate(5.0D),
+                            e -> hostileTo(player).test(e) && !struck.contains(e)).stream()
+                    .min(java.util.Comparator.comparingDouble(e -> e.distanceToSqr(previous)))
+                    .orElse(null);
+        }
+        playSound(player, SoundEvents.LIGHTNING_BOLT_IMPACT, 1.6F);
+        return true;
+    }
+
+    /** Nova Gravidade: drags enemies to the aimed point and slows them. */
+    private static boolean castGravityNova(ServerPlayer player, PlayerRpg rpg) {
+        long gameTime = player.level().getGameTime();
+        float damage = 4.0F * RpgStats.magicDamageMultiplier(rpg) * voidBonus(rpg, gameTime);
+        Vec3 center = rayTarget(player, 16.0D);
+        ServerLevel level = level(player);
+        for (LivingEntity target : level.getEntitiesOfClass(LivingEntity.class,
+                new AABB(BlockPos.containing(center)).inflate(6.0D), hostileTo(player))) {
+            Vec3 pull = center.subtract(target.position()).scale(0.30D).add(0.0D, 0.15D, 0.0D);
+            target.setDeltaMovement(pull);
+            target.hurtMarked = true;
+            target.hurt(player.damageSources().indirectMagic(player, player), damage);
+            slowTarget(target, 120, 2);
+        }
+        SkillFx.swirl(level, center, 5.0D, SkillFx.ARCANE_A, SkillFx.ARCANE_B);
+        level.sendParticles(ParticleTypes.PORTAL, center.x, center.y + 0.5D, center.z,
+                60, 2.0D, 0.5D, 2.0D, 0.5D);
+        playSound(player, SoundEvents.ENDERMAN_TELEPORT, 0.6F);
+        return true;
+    }
+
+    /** Fissura Dimensional: a rift zone that burns enemies inside for 8s. */
+    private static boolean castDimensionalRift(ServerPlayer player, PlayerRpg rpg) {
+        long gameTime = player.level().getGameTime();
+        float damage = 3.0F * RpgStats.magicDamageMultiplier(rpg) * voidBonus(rpg, gameTime);
+        Vec3 center = rayTarget(player, 16.0D);
+        RIFTS.add(new Rift(level(player), player.getUUID(), center, gameTime + 160, damage));
+        playSound(player, SoundEvents.END_PORTAL_SPAWN, 1.6F);
+        return true;
+    }
+
+    /** Teleporte Ofensivo: blink to the aimed enemy and blast the arrival. */
+    private static boolean castOffensiveTeleport(ServerPlayer player, PlayerRpg rpg) {
+        long gameTime = player.level().getGameTime();
+        float damage = 9.0F * RpgStats.magicDamageMultiplier(rpg) * voidBonus(rpg, gameTime);
+        ServerLevel level = level(player);
+        Vec3 start = player.getEyePosition();
+        Vec3 reach = rayTarget(player, 18.0D);
+        LivingEntity target = level.getEntitiesOfClass(LivingEntity.class,
+                        new AABB(start, reach).inflate(1.5D), hostileTo(player)).stream()
+                .filter(e -> distanceToSegment(e.position().add(0.0D, e.getBbHeight() * 0.5D, 0.0D),
+                        start, reach) <= 1.5D)
+                .min(java.util.Comparator.comparingDouble(e -> e.distanceToSqr(player)))
+                .orElse(null);
+        if (target == null) {
+            return false; // No target in sight: free re-cast.
+        }
+        level.sendParticles(ParticleTypes.PORTAL,
+                player.getX(), player.getY(1.0D), player.getZ(), 30, 0.4D, 0.8D, 0.4D, 0.2D);
+        Vec3 arrival = target.position().subtract(
+                target.position().subtract(player.position()).normalize().scale(1.5D));
+        player.teleportTo(arrival.x, target.getY(), arrival.z);
+        for (LivingEntity nearby : level.getEntitiesOfClass(LivingEntity.class,
+                new AABB(player.blockPosition()).inflate(3.0D), hostileTo(player))) {
+            nearby.hurt(player.damageSources().indirectMagic(player, player), damage);
+        }
+        SkillFx.shockwave(level, player.position(), 3.0D, SkillFx.ARCANE_A, SkillFx.ARCANE_B);
+        level.sendParticles(ParticleTypes.REVERSE_PORTAL,
+                player.getX(), player.getY(1.0D), player.getZ(), 30, 0.4D, 0.8D, 0.4D, 0.2D);
+        playSound(player, SoundEvents.ENDERMAN_TELEPORT, 1.2F);
+        return true;
+    }
+
+    /** Lâminas Arcana: a wave of energy blades sweeping forward in a line. */
+    private static boolean castArcaneBlades(ServerPlayer player, PlayerRpg rpg) {
+        long gameTime = player.level().getGameTime();
+        float damage = 8.0F * RpgStats.magicDamageMultiplier(rpg) * voidBonus(rpg, gameTime);
+        ServerLevel level = level(player);
+        Vec3 look = new Vec3(player.getLookAngle().x, 0.0D, player.getLookAngle().z).normalize();
+        Vec3 side = look.cross(new Vec3(0.0D, 1.0D, 0.0D)).normalize();
+
+        java.util.Set<LivingEntity> struck = new java.util.HashSet<>();
+        for (int step = 1; step <= 10; step++) {
+            Vec3 point = player.position().add(look.scale(step));
+            for (int lane = -1; lane <= 1; lane++) {
+                Vec3 blade = point.add(side.scale(lane * 1.2D));
+                if (step % 2 == lane % 2 + 1 || step % 3 == 0) {
+                    SkillFx.blade(level, blade.add(0.0D, 0.3D, 0.0D),
+                            SkillFx.ARCANE_A, SkillFx.ARCANE_B);
+                }
+            }
+            for (LivingEntity target : level.getEntitiesOfClass(LivingEntity.class,
+                    new AABB(BlockPos.containing(point)).inflate(1.6D),
+                    e -> hostileTo(player).test(e) && !struck.contains(e))) {
+                target.hurt(player.damageSources().indirectMagic(player, player), damage);
+                struck.add(target);
+                level.sendParticles(ParticleTypes.SWEEP_ATTACK,
+                        target.getX(), target.getY(0.6D), target.getZ(), 1, 0.0D, 0.0D, 0.0D, 0.0D);
+            }
+        }
+        playSound(player, SoundEvents.PLAYER_ATTACK_SWEEP, 0.7F);
+        return true;
+    }
+
+    /** Campo de Anulação: strips enemy buffs and weakens them inside the circle. */
+    private static boolean castNullificationField(ServerPlayer player) {
+        ServerLevel level = level(player);
+        for (LivingEntity target : level.getEntitiesOfClass(LivingEntity.class,
+                new AABB(player.blockPosition()).inflate(6.0D), hostileTo(player))) {
+            java.util.List<net.minecraft.world.effect.MobEffect> beneficial =
+                    target.getActiveEffects().stream()
+                            .filter(instance -> instance.getEffect().isBeneficial())
+                            .map(MobEffectInstance::getEffect)
+                            .collect(Collectors.toList());
+            beneficial.forEach(target::removeEffect);
+            target.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 120, 1));
+        }
+        // Rune circle on the ground.
+        SkillFx.ring(level, player.position().add(0.0D, 0.1D, 0.0D), 6.0D,
+                SkillFx.ARCANE_B, SkillFx.ARCANE_A, 1.2F, 0.0D);
+        SkillFx.ring(level, player.position().add(0.0D, 0.12D, 0.0D), 4.0D,
+                SkillFx.ARCANE_A, SkillFx.ARCANE_B, 1.0F, 0.0D);
+        level.sendParticles(ParticleTypes.ENCHANT,
+                player.getX(), player.getY(1.0D), player.getZ(), 80, 3.0D, 0.3D, 3.0D, 0.5D);
+        playSound(player, SoundEvents.BEACON_DEACTIVATE, 1.4F);
+        return true;
+    }
+
+    /** Corrente Arcana: energy chains that root enemies in place. */
+    private static boolean castArcaneChain(ServerPlayer player, PlayerRpg rpg) {
+        long gameTime = player.level().getGameTime();
+        float damage = 4.0F * RpgStats.magicDamageMultiplier(rpg) * voidBonus(rpg, gameTime);
+        ServerLevel level = level(player);
+        Vec3 hand = player.position().add(0.0D, 1.2D, 0.0D);
+        int chained = 0;
+        for (LivingEntity target : level.getEntitiesOfClass(LivingEntity.class,
+                new AABB(player.blockPosition()).inflate(8.0D), hostileTo(player))) {
+            if (chained >= 4) {
+                break;
+            }
+            target.hurt(player.damageSources().indirectMagic(player, player), damage);
+            slowTarget(target, 140, 5);
+            target.setDeltaMovement(Vec3.ZERO);
+            target.hurtMarked = true;
+            SkillFx.jaggedLine(level, hand,
+                    target.position().add(0.0D, target.getBbHeight() * 0.5D, 0.0D),
+                    SkillFx.ARCANE_B, SkillFx.ARCANE_A);
+            chained++;
+        }
+        playSound(player, SoundEvents.CHAIN_PLACE, 0.6F);
+        return chained > 0;
+    }
+
+    /** Presença do Vazio tick: the dark aura burns everything near the caster. */
+    public static void tickVoidPresence(ServerPlayer player, PlayerRpg rpg, long gameTime) {
+        ServerLevel level = level(player);
+        if (gameTime % 4 == 0) {
+            double theta = gameTime * 0.3D;
+            level.sendParticles(new DustParticleOptions(SkillFx.ARCANE_B, 1.3F),
+                    player.getX() + Math.cos(theta) * 1.8D, player.getY(0.3D),
+                    player.getZ() + Math.sin(theta) * 1.8D, 1, 0.05D, 0.3D, 0.05D, 0.0D);
+            level.sendParticles(ParticleTypes.SMOKE,
+                    player.getX(), player.getY(0.2D), player.getZ(), 2, 0.8D, 0.1D, 0.8D, 0.01D);
+        }
+        if (gameTime % 20 != 0) {
+            return;
+        }
+        float damage = 2.5F * RpgStats.magicDamageMultiplier(rpg);
+        for (LivingEntity target : level.getEntitiesOfClass(LivingEntity.class,
+                new AABB(player.blockPosition()).inflate(4.0D), hostileTo(player))) {
+            target.hurt(player.damageSources().indirectMagic(player, player), damage);
+        }
+    }
+
+    /** Cometa Arcano: a heavy comet that detonates on impact. */
+    private static boolean castArcaneComet(ServerPlayer player, PlayerRpg rpg) {
+        long gameTime = player.level().getGameTime();
+        float damage = 14.0F * RpgStats.magicDamageMultiplier(rpg) * voidBonus(rpg, gameTime);
+        MagicBoltEntity comet = new MagicBoltEntity(player.level(), player, damage,
+                MagicBoltEntity.Variant.SUPREME).withAoe(4.0F);
+        comet.shootFromRotation(player, player.getXRot(), player.getYRot(), 0.0F, 2.2F, 0.2F);
+        player.level().addFreshEntity(comet);
+        Vec3 muzzle = player.getEyePosition().add(player.getLookAngle().scale(1.0D));
+        level(player).sendParticles(new DustParticleOptions(SkillFx.ARCANE_A, 1.6F),
+                muzzle.x, muzzle.y, muzzle.z, 12, 0.2D, 0.2D, 0.2D, 0.1D);
+        playSound(player, SoundEvents.DRAGON_FIREBALL_EXPLODE, 1.0F);
+        return true;
+    }
+
+    // ------------------------------------------------------------------
+    // Dimensional rifts (ticked zones)
+    // ------------------------------------------------------------------
+
+    private record Rift(ServerLevel level, java.util.UUID owner, Vec3 center, long until, float damage) {
+    }
+
+    private static final List<Rift> RIFTS = new java.util.concurrent.CopyOnWriteArrayList<>();
+
+    /** Called every server level tick from RpgEvents. */
+    public static void tickRifts(ServerLevel level) {
+        long gameTime = level.getGameTime();
+        for (Rift rift : RIFTS) {
+            if (rift.level() != level) {
+                continue;
+            }
+            if (gameTime >= rift.until()) {
+                RIFTS.remove(rift);
+                continue;
+            }
+            if (gameTime % 5 == 0) {
+                SkillFx.swirl(level, rift.center(), 3.0D, SkillFx.ARCANE_B, SkillFx.ARCANE_A);
+                level.sendParticles(ParticleTypes.PORTAL,
+                        rift.center().x, rift.center().y + 0.4D, rift.center().z,
+                        10, 1.2D, 0.3D, 1.2D, 0.1D);
+            }
+            if (gameTime % 10 == 0) {
+                ServerPlayer owner = level.getServer().getPlayerList().getPlayer(rift.owner());
+                for (LivingEntity target : level.getEntitiesOfClass(LivingEntity.class,
+                        new AABB(BlockPos.containing(rift.center())).inflate(3.0D),
+                        e -> e.isAlive() && (owner == null || e != owner))) {
+                    target.hurt(owner != null
+                            ? level.damageSources().indirectMagic(owner, owner)
+                            : level.damageSources().magic(), rift.damage());
+                }
+            }
+        }
+    }
+
+    private static void slowTarget(LivingEntity target, int ticks, int amplifier) {
+        target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, ticks, amplifier));
+    }
+
+    /** Distance from a point to the segment [a, b]. */
+    private static double distanceToSegment(Vec3 point, Vec3 a, Vec3 b) {
+        Vec3 ab = b.subtract(a);
+        double t = Mth.clamp(point.subtract(a).dot(ab) / ab.lengthSqr(), 0.0D, 1.0D);
+        return point.distanceTo(a.add(ab.scale(t)));
     }
 
     // ------------------------------------------------------------------
