@@ -80,9 +80,20 @@ public class SkillTreeScreen extends Screen {
         knownUnlocked.clear();
         knownUnlocked.addAll(ClientRpgData.get().getUnlockedSkills());
 
-        int tabWidth = 64;
-        int totalWidth = SkillTrees.Tree.values().length * (tabWidth + 2) - 2;
-        int x = (width - totalWidth) / 2;
+        // Back button on the far left; the tree tabs fill the rest of the row,
+        // sized to always fit no matter how many trees exist.
+        int backWidth = 46;
+        addRenderableWidget(Button.builder(Component.translatable("screen.magik.back"),
+                        button -> minecraft.setScreen(new CharacterScreen()))
+                .bounds(6, 6, backWidth, 18)
+                .build());
+
+        int trees = SkillTrees.Tree.values().length;
+        int tabsLeft = 6 + backWidth + 6;
+        int tabsArea = width - tabsLeft - 6;
+        int gap = 2;
+        int tabWidth = Math.max(28, (tabsArea - (trees - 1) * gap) / trees);
+        int x = tabsLeft;
         for (SkillTrees.Tree tree : SkillTrees.Tree.values()) {
             SkillTrees.Tree tabTree = tree;
             addRenderableWidget(Button.builder(tree.getDisplayName(), button -> {
@@ -91,13 +102,8 @@ public class SkillTreeScreen extends Screen {
                     })
                     .bounds(x, 6, tabWidth, 18)
                     .build());
-            x += tabWidth + 2;
+            x += tabWidth + gap;
         }
-
-        addRenderableWidget(Button.builder(Component.translatable("screen.magik.back"),
-                        button -> minecraft.setScreen(new CharacterScreen()))
-                .bounds(6, 6, 50, 18)
-                .build());
     }
 
     // ------------------------------------------------------------------
@@ -113,12 +119,40 @@ public class SkillTreeScreen extends Screen {
     }
 
     private void ensurePan() {
-        if (!panInitialized) {
+        if (panInitialized) {
+            return;
+        }
+        panInitialized = true;
+
+        // Auto-fit the whole current tree inside the canvas so nodes never
+        // stack off-screen or overlap the UI, whatever the tree's shape.
+        List<Skill> skills = SkillTrees.byTree(currentTree);
+        double minX = Double.MAX_VALUE, maxX = -Double.MAX_VALUE;
+        double minY = Double.MAX_VALUE, maxY = -Double.MAX_VALUE;
+        for (Skill skill : skills) {
+            double nx = nodeWorldX(skill);
+            double ny = nodeWorldY(skill);
+            minX = Math.min(minX, nx);
+            maxX = Math.max(maxX, nx + NODE_SIZE);
+            minY = Math.min(minY, ny);
+            maxY = Math.max(maxY, ny + NODE_SIZE);
+        }
+        if (skills.isEmpty()) {
             panX = width / 2.0D;
             panY = canvasTop() + 40.0D;
             zoom = 1.0D;
-            panInitialized = true;
+            return;
         }
+        double treeW = (maxX - minX) + 40.0D;
+        double treeH = (maxY - minY) + 40.0D;
+        double canvasW = width;
+        double canvasH = canvasBottom() - canvasTop();
+        zoom = Mth.clamp(Math.min(canvasW / treeW, canvasH / treeH), 0.5D, 1.3D);
+        // Center the tree's bounding box in the canvas.
+        double centerX = (minX + maxX) / 2.0D;
+        double centerY = (minY + maxY) / 2.0D;
+        panX = width / 2.0D - centerX * zoom;
+        panY = (canvasTop() + canvasBottom()) / 2.0D - centerY * zoom;
     }
 
     private double nodeWorldX(Skill skill) {
