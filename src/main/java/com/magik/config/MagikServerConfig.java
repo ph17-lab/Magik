@@ -17,6 +17,7 @@ public final class MagikServerConfig {
     public static final ForgeConfigSpec.DoubleValue XP_CURVE_EXPONENT;
     public static final ForgeConfigSpec.IntValue ATTRIBUTE_POINTS_PER_LEVEL;
     public static final ForgeConfigSpec.IntValue SKILL_POINTS_PER_LEVEL;
+    public static final ForgeConfigSpec.IntValue MAX_ATTRIBUTE;
 
     // --- XP sources ---
     public static final ForgeConfigSpec.DoubleValue KILL_XP_MULTIPLIER;
@@ -46,6 +47,8 @@ public final class MagikServerConfig {
         XP_CURVE_EXPONENT = b.defineInRange("xpCurveExponent", 1.55D, 1.0D, 4.0D);
         ATTRIBUTE_POINTS_PER_LEVEL = b.comment("Attribute points granted on each level up.")
                 .defineInRange("attributePointsPerLevel", 3, 0, 100);
+        MAX_ATTRIBUTE = b.comment("Maximum value a single attribute can reach.")
+                .defineInRange("maxAttribute", 100, 1, 10000);
         SKILL_POINTS_PER_LEVEL = b.comment("Skill points granted on each level up.")
                 .defineInRange("skillPointsPerLevel", 1, 0, 100);
         b.pop();

@@ -140,16 +140,17 @@ public class PlayerRpg {
     }
 
     public void setAttribute(RpgAttribute attribute, int value) {
-        attributes.put(attribute, Math.max(0, value));
+        attributes.put(attribute, Mth.clamp(value, 0, MagikServerConfig.MAX_ATTRIBUTE.get()));
     }
 
-    /** Spends one attribute point if available. @return true on success. */
+    /** Spends one attribute point if available and the cap is not reached. */
     public boolean spendAttributePoint(RpgAttribute attribute) {
-        if (attributePoints <= 0) {
+        if (attributePoints <= 0
+                || getAttribute(attribute) >= MagikServerConfig.MAX_ATTRIBUTE.get()) {
             return false;
         }
         attributePoints--;
-        attributes.merge(attribute, 1, Integer::sum);
+        setAttribute(attribute, getAttribute(attribute) + 1);
         return true;
     }
 

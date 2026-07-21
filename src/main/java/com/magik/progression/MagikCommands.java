@@ -60,15 +60,12 @@ public final class MagikCommands {
             rpg.setLevel(maxLevel);
             rpg.setXp(0);
 
-            // Spread every attribute point a max-level player would have earned
-            // evenly across the seven attributes; the remainder stays spendable.
-            int totalPoints = (maxLevel - 1) * MagikServerConfig.ATTRIBUTE_POINTS_PER_LEVEL.get();
-            RpgAttribute[] attributes = RpgAttribute.values();
-            int perAttribute = totalPoints / attributes.length;
-            for (RpgAttribute attribute : attributes) {
-                rpg.setAttribute(attribute, perAttribute);
+            // Master every attribute: push each one to its maximum.
+            int cap = MagikServerConfig.MAX_ATTRIBUTE.get();
+            for (RpgAttribute attribute : RpgAttribute.values()) {
+                rpg.setAttribute(attribute, cap);
             }
-            rpg.setAttributePoints(totalPoints % attributes.length);
+            rpg.setAttributePoints(0);
             rpg.setSkillPoints(0);
 
             for (String skillId : SkillTrees.all().keySet()) {
