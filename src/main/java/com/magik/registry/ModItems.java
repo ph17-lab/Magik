@@ -87,10 +87,23 @@ public final class ModItems {
     // Daggers (rogue - meant to be dual-wielded, powers the Adaga tree)
     // ------------------------------------------------------------------
 
+    /** Shared empty GeckoLib animation for all static weapon geometries. */
+    private static final net.minecraft.resources.ResourceLocation WEAPON_ANIM =
+            MagikMod.id("animations/staff.animation.json");
+
+    private static net.minecraft.resources.ResourceLocation geo(String name) {
+        return MagikMod.id("geo/" + name + ".geo.json");
+    }
+
+    private static net.minecraft.resources.ResourceLocation tex(String name) {
+        return MagikMod.id("textures/item/" + name + ".png");
+    }
+
     /** Shadow Dagger: fast, light, high crit; wield one in each hand. */
     public static final RegistryObject<Item> SHADOW_DAGGER = ITEMS.register("shadow_dagger",
             () -> new DaggerItem(Tiers.NETHERITE, 2, 2.4F,
                     ItemRequirements.of(8, AGILITY, 6), 0.12F,
+                    geo("shadow_dagger"), tex("dagger"), WEAPON_ANIM,
                     new Item.Properties().rarity(Rarity.RARE)));
 
     // ------------------------------------------------------------------
@@ -100,17 +113,20 @@ public final class ModItems {
     /** Slow, brutal warhammer. */
     public static final RegistryObject<Item> WARHAMMER = ITEMS.register("warhammer",
             () -> new HeavyWeaponItem(Tiers.IRON, 7, -3.2F,
-                    ItemRequirements.of(15, STRENGTH, 10), new Item.Properties()));
+                    ItemRequirements.of(15, STRENGTH, 10),
+                    geo("warhammer"), tex("warhammer"), WEAPON_ANIM, new Item.Properties()));
 
     /** Combat axe with elevated crit chance. */
     public static final RegistryObject<Item> BATTLE_AXE = ITEMS.register("battle_axe",
             () -> new RpgAxeItem(Tiers.IRON, 8.0F, -3.1F,
-                    ItemRequirements.of(12, STRENGTH, 8), 0.10F, new Item.Properties()));
+                    ItemRequirements.of(12, STRENGTH, 8), 0.10F,
+                    geo("battle_axe"), tex("battle_axe"), WEAPON_ANIM, new Item.Properties()));
 
     /** Colossal two-handed axe. */
     public static final RegistryObject<Item> GIANT_AXE = ITEMS.register("giant_axe",
             () -> new RpgAxeItem(Tiers.DIAMOND, 9.0F, -3.4F,
                     ItemRequirements.of(30, STRENGTH, 20), 0.15F,
+                    geo("giant_axe"), tex("giant_axe"), WEAPON_ANIM,
                     new Item.Properties().rarity(Rarity.EPIC)));
 
     // ------------------------------------------------------------------
