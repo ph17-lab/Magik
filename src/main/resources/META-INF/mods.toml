@@ -29,3 +29,12 @@ description='''${mod_description}'''
     versionRange="[4.4,)"
     ordering="AFTER"
     side="BOTH"
+
+# Optional: when Spartan Weaponry is present its daggers, greatswords, battle
+# hammers, halberds, etc. are recognized by the skill trees (see WeaponType).
+[[dependencies.${mod_id}]]
+    modId="spartanweaponry"
+    mandatory=false
+    versionRange="*"
+    ordering="AFTER"
+    side="BOTH"

@@ -1,6 +1,0 @@
-{
-  "parent": "magik:item/sword_3d",
-  "textures": {
-    "base": "magik:item/sword_3d_knight_sword"
-  }
-}

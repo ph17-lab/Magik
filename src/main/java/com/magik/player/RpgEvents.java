@@ -3,7 +3,6 @@ package com.magik.player;
 import com.magik.MagikMod;
 import com.magik.combat.RpgAttributeApplier;
 import com.magik.item.RpgGear;
-import com.magik.item.RpgShieldItem;
 import com.magik.network.MagikNetwork;
 import com.magik.skills.SkillCasting;
 import com.magik.skills.SkillFx;
@@ -164,9 +163,9 @@ public final class RpgEvents {
                         SkillFx.ARCANE_A, SkillFx.ARCANE_B);
             }
 
-            // Active guard: blocking with an RPG shield projects a green
-            // barrier and drains stamina; when it empties the guard breaks.
-            if (player.isBlocking() && player.getUseItem().getItem() instanceof RpgShieldItem) {
+            // Active guard: blocking with any shield projects a green barrier
+            // and drains stamina; when it empties the guard breaks.
+            if (player.isBlocking() && player.getUseItem().getItem() instanceof net.minecraft.world.item.ShieldItem) {
                 if (rpg.consumeStamina(0.4F, gameTime)) {
                     if (gameTime % 4 == 0) {
                         SkillFx.guardDome((ServerLevel) player.level(), player);

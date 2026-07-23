@@ -215,10 +215,10 @@ public final class SkillCasting {
                 || player.getOffhandItem().getItem() instanceof com.magik.item.StaffItem;
     }
 
-    /** True only when a dagger is held in BOTH hands. */
+    /** True only when a dagger is held in BOTH hands (vanilla or Spartan Weaponry). */
     public static boolean holdingDaggers(ServerPlayer player) {
-        return player.getMainHandItem().getItem() instanceof com.magik.item.Dagger
-                && player.getOffhandItem().getItem() instanceof com.magik.item.Dagger;
+        return com.magik.combat.WeaponType.of(player.getMainHandItem()) == com.magik.combat.WeaponType.DAGGER
+                && com.magik.combat.WeaponType.of(player.getOffhandItem()) == com.magik.combat.WeaponType.DAGGER;
     }
 
     /** Shadow-purple dagger damage: melee scaling + a flat rogue base. */

@@ -2,8 +2,6 @@ package com.magik.combat;
 
 import com.magik.MagikMod;
 import com.magik.entity.MagicBoltEntity;
-import com.magik.item.Dagger;
-import com.magik.item.HeavyWeapon;
 import com.magik.item.RpgGear;
 import com.magik.skills.SkillTrees;
 import com.magik.player.PlayerRpg;
@@ -82,10 +80,10 @@ public final class CombatEvents {
         Entity direct = source.getDirectEntity();
         boolean melee = direct == attacker;
         boolean ranged = direct instanceof Projectile && !(direct instanceof MagicBoltEntity);
-        boolean dagger = melee && attacker.getMainHandItem().getItem() instanceof Dagger;
-        boolean sword = melee && attacker.getMainHandItem().getItem() instanceof SwordItem
-                && !(attacker.getMainHandItem().getItem() instanceof HeavyWeapon) && !dagger;
-        boolean heavy = melee && attacker.getMainHandItem().getItem() instanceof HeavyWeapon;
+        WeaponType weapon = melee ? WeaponType.of(attacker.getMainHandItem()) : WeaponType.NONE;
+        boolean dagger = weapon == WeaponType.DAGGER;
+        boolean sword = weapon == WeaponType.SWORD;
+        boolean heavy = weapon == WeaponType.HEAVY;
         boolean forceCrit = false;
 
         if (melee) {
@@ -98,7 +96,7 @@ public final class CombatEvents {
             }
             if (dagger) {
                 // Dual-wielding two daggers rewards the rogue with extra bite.
-                if (attacker.getOffhandItem().getItem() instanceof Dagger) {
+                if (WeaponType.of(attacker.getOffhandItem()) == WeaponType.DAGGER) {
                     amount *= 1.15F;
                 }
                 // Shadow Veil: the first strike from stealth always crits and
@@ -214,7 +212,7 @@ public final class CombatEvents {
         if (event.getSource().getEntity() instanceof ServerPlayer killer) {
             PlayerRpgProvider.get(killer).ifPresent(rpg -> {
                 if (rpg.hasSkill(SkillTrees.SHADOW_MASTER)
-                        && killer.getMainHandItem().getItem() instanceof Dagger) {
+                        && WeaponType.of(killer.getMainHandItem()) == WeaponType.DAGGER) {
                     long gameTime = killer.level().getGameTime();
                     rpg.setStealthUntil(gameTime + 100);
                     killer.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, 100, 0, false, false));

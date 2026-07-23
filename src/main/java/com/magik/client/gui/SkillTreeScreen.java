@@ -5,6 +5,7 @@ import com.magik.client.KeyBindings;
 import com.magik.client.SkillIcons;
 import com.magik.network.AssignSkillSlotPacket;
 import com.magik.network.MagikNetwork;
+import com.magik.network.RespecPacket;
 import com.magik.network.UnlockSkillPacket;
 import com.magik.player.PlayerRpg;
 import com.magik.skills.Skill;
@@ -25,27 +26,26 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * The skill tree screen: five tabs (one per tree, each with its own accent
- * color), a pannable and mouse-wheel-zoomable canvas, nodes connected like
- * modern RPG talent trees, animated unlocks, rich tooltips and hotkey slot
- * assignment (hover an unlocked active skill and press 1-4).
+ * The redesigned skill tree: a themed, branching talent tree. Each tree has a
+ * glowing root emblem that its branches flow out of, circular nodes with soft
+ * accent glows, tapered connectors that animate a pulse of energy along
+ * unlocked paths, and a drifting particle background tinted per tree. Supports
+ * pan/zoom with auto-fit, animated unlocks, rich tooltips, hotkey slot binding
+ * and a one-click respec.
  */
 public class SkillTreeScreen extends Screen {
 
     // --- Canvas layout (world coordinates, scaled by zoom) ---
-    private static final int NODE_SIZE = 28;
-    private static final int BRANCH_OFFSET_X = 70;
-    private static final int TIER_SPACING_Y = 74;
+    private static final int NODE_SIZE = 30;
+    private static final int BRANCH_OFFSET_X = 78;
+    private static final int TIER_SPACING_Y = 82;
+    private static final double ROOT_Y = -TIER_SPACING_Y * 0.9D;
 
     // --- Palette ---
-    private static final int COLOR_PANEL = 0xE80D0D14;
-    private static final int COLOR_CANVAS = 0xFF15151E;
-    private static final int COLOR_BORDER = 0xFF3A3A4A;
-    private static final int COLOR_TEXT = 0xFFE0E0E0;
+    private static final int COLOR_TEXT = 0xFFEDEDF2;
     private static final int COLOR_MUTED = 0xFF9A9AA5;
-    private static final int COLOR_LOCKED = 0xB0000000;
 
-    /** Accent color of each tree, used for tabs, connections and node frames. */
+    /** Accent color of each tree. */
     private static int accent(SkillTrees.Tree tree) {
         return switch (tree) {
             case ARCANE -> 0xFFB13BD8;
@@ -60,16 +60,15 @@ public class SkillTreeScreen extends Screen {
 
     private SkillTrees.Tree currentTree = SkillTrees.Tree.ARCANE;
 
-    // Pan & zoom state.
     private double panX;
     private double panY;
     private double zoom = 1.0D;
     private boolean panInitialized;
     private double dragDistance;
 
-    // Unlock animation bookkeeping.
     private final Set<String> knownUnlocked = new HashSet<>();
     private final Map<String, Long> unlockAnimations = new HashMap<>();
+    private Button respecButton;
 
     public SkillTreeScreen() {
         super(Component.translatable("screen.magik.skills"));
@@ -80,8 +79,6 @@ public class SkillTreeScreen extends Screen {
         knownUnlocked.clear();
         knownUnlocked.addAll(ClientRpgData.get().getUnlockedSkills());
 
-        // Back button on the far left; the tree tabs fill the rest of the row,
-        // sized to always fit no matter how many trees exist.
         int backWidth = 46;
         addRenderableWidget(Button.builder(Component.translatable("screen.magik.back"),
                         button -> minecraft.setScreen(new CharacterScreen()))
@@ -104,11 +101,14 @@ public class SkillTreeScreen extends Screen {
                     .build());
             x += tabWidth + gap;
         }
-    }
 
-    // ------------------------------------------------------------------
-    // Coordinate transforms
-    // ------------------------------------------------------------------
+        // Respec button in the footer.
+        respecButton = Button.builder(Component.translatable("screen.magik.respec"),
+                        button -> MagikNetwork.CHANNEL.sendToServer(new RespecPacket()))
+                .bounds(width - 92, height - 22, 86, 18)
+                .build();
+        addRenderableWidget(respecButton);
+    }
 
     private int canvasTop() {
         return 30;
@@ -124,11 +124,9 @@ public class SkillTreeScreen extends Screen {
         }
         panInitialized = true;
 
-        // Auto-fit the whole current tree inside the canvas so nodes never
-        // stack off-screen or overlap the UI, whatever the tree's shape.
         List<Skill> skills = SkillTrees.byTree(currentTree);
-        double minX = Double.MAX_VALUE, maxX = -Double.MAX_VALUE;
-        double minY = Double.MAX_VALUE, maxY = -Double.MAX_VALUE;
+        double minX = -BRANCH_OFFSET_X, maxX = BRANCH_OFFSET_X;
+        double minY = ROOT_Y, maxY = 0;
         for (Skill skill : skills) {
             double nx = nodeWorldX(skill);
             double ny = nodeWorldY(skill);
@@ -137,18 +135,9 @@ public class SkillTreeScreen extends Screen {
             minY = Math.min(minY, ny);
             maxY = Math.max(maxY, ny + NODE_SIZE);
         }
-        if (skills.isEmpty()) {
-            panX = width / 2.0D;
-            panY = canvasTop() + 40.0D;
-            zoom = 1.0D;
-            return;
-        }
-        double treeW = (maxX - minX) + 40.0D;
-        double treeH = (maxY - minY) + 40.0D;
-        double canvasW = width;
-        double canvasH = canvasBottom() - canvasTop();
-        zoom = Mth.clamp(Math.min(canvasW / treeW, canvasH / treeH), 0.5D, 1.3D);
-        // Center the tree's bounding box in the canvas.
+        double treeW = (maxX - minX) + 60.0D;
+        double treeH = (maxY - minY) + 60.0D;
+        zoom = Mth.clamp(Math.min(width / treeW, (canvasBottom() - canvasTop()) / treeH), 0.5D, 1.25D);
         double centerX = (minX + maxX) / 2.0D;
         double centerY = (minY + maxY) / 2.0D;
         panX = width / 2.0D - centerX * zoom;
@@ -156,7 +145,6 @@ public class SkillTreeScreen extends Screen {
     }
 
     private double nodeWorldX(Skill skill) {
-        // Branches spread symmetrically around the center (works for any count).
         int branches = SkillTrees.branchCount(skill.getTree());
         double spacing = BRANCH_OFFSET_X * 2.0D;
         return (skill.getBranch() - (branches - 1) / 2.0D) * spacing - NODE_SIZE / 2.0D;
@@ -173,22 +161,19 @@ public class SkillTreeScreen extends Screen {
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         ensurePan();
-        renderBackground(graphics);
         PlayerRpg rpg = ClientRpgData.get();
         trackUnlockAnimations(rpg);
-
-        graphics.fill(0, canvasTop(), width, canvasBottom(), COLOR_CANVAS);
-        graphics.fill(0, canvasTop() - 1, width, canvasTop(), COLOR_BORDER);
-        graphics.fill(0, canvasBottom(), width, canvasBottom() + 1, COLOR_BORDER);
-
         int accent = accent(currentTree);
-        List<Skill> skills = SkillTrees.byTree(currentTree);
 
+        renderThemedBackground(graphics, accent);
+
+        List<Skill> skills = SkillTrees.byTree(currentTree);
         graphics.enableScissor(0, canvasTop(), width, canvasBottom());
         graphics.pose().pushPose();
         graphics.pose().translate(panX, panY, 0);
         graphics.pose().scale((float) zoom, (float) zoom, 1.0F);
 
+        renderRoot(graphics, skills, rpg, accent);
         renderConnections(graphics, skills, rpg, accent);
         Skill hovered = null;
         for (Skill skill : skills) {
@@ -200,7 +185,11 @@ public class SkillTreeScreen extends Screen {
         graphics.pose().popPose();
         graphics.disableScissor();
 
+        renderHeader(graphics, rpg, accent);
         renderFooter(graphics, rpg);
+        if (respecButton != null) {
+            respecButton.active = !rpg.getUnlockedSkills().isEmpty();
+        }
         super.render(graphics, mouseX, mouseY, partialTick);
 
         if (hovered != null) {
@@ -208,7 +197,57 @@ public class SkillTreeScreen extends Screen {
         }
     }
 
-    /** L-shaped connectors between consecutive nodes, lit when unlocked. */
+    /** A dark accent-tinted gradient with slow drifting motes. */
+    private void renderThemedBackground(GuiGraphics graphics, int accent) {
+        int top = blend(0xFF0B0B12, accent, 0.10F);
+        int bottom = 0xFF07070C;
+        graphics.fillGradient(0, canvasTop(), width, canvasBottom(), top, bottom);
+
+        long t = System.currentTimeMillis();
+        int h = canvasBottom() - canvasTop();
+        for (int i = 0; i < 55; i++) {
+            long seed = i * 2654435761L;
+            int sx = (int) (Math.abs(seed >> 8) % width);
+            double speed = 6.0D + (Math.abs(seed >> 3) % 10);
+            int sy = canvasTop() + (int) (((Math.abs(seed) % h) + t / (140.0D - speed)) % h);
+            int alpha = 0x22 + (int) (0x33 * (0.5 + 0.5 * Math.sin(t / 500.0D + i)));
+            int size = (i % 7 == 0) ? 2 : 1;
+            graphics.fill(sx, sy, sx + size, sy + size, withAlpha(accent, alpha));
+        }
+        // Framing lines.
+        graphics.fill(0, canvasTop() - 1, width, canvasTop(), withAlpha(accent, 0x80));
+        graphics.fill(0, canvasBottom(), width, canvasBottom() + 1, withAlpha(accent, 0x80));
+    }
+
+    /** The glowing tree emblem every branch grows from. */
+    private void renderRoot(GuiGraphics graphics, List<Skill> skills, PlayerRpg rpg, int accent) {
+        int cx = 0;
+        int cy = (int) (ROOT_Y + NODE_SIZE / 2.0D);
+        int unlocked = SkillTrees.unlockedInTree(rpg, currentTree);
+        boolean any = unlocked > 0;
+        glow(graphics, cx, cy, 22, withAlpha(accent, any ? 0x60 : 0x28));
+        fillDisc(graphics, cx, cy, 15, 0xFF12121C);
+        ring(graphics, cx, cy, 15, withAlpha(accent, 0xFF), 2);
+        // Emblem: the tree's initial.
+        String letter = currentTree.getDisplayName().getString().substring(0, 1).toUpperCase();
+        graphics.pose().pushPose();
+        graphics.pose().translate(cx, cy - 4, 0);
+        graphics.pose().scale(1.6F, 1.6F, 1.0F);
+        graphics.drawCenteredString(font, letter, 0, 0, accent);
+        graphics.pose().popPose();
+
+        // Connect the root to every branch's first node.
+        for (Skill skill : skills) {
+            if (skill.getTier() == 0) {
+                int x2 = (int) (nodeWorldX(skill) + NODE_SIZE / 2.0D);
+                int y2 = (int) nodeWorldY(skill);
+                boolean lit = rpg.hasSkill(skill.getId());
+                connector(graphics, cx, cy + 15, x2, y2, accent, lit || any, lit);
+            }
+        }
+    }
+
+    /** Tapered connectors with an animated energy pulse on unlocked links. */
     private void renderConnections(GuiGraphics graphics, List<Skill> skills, PlayerRpg rpg, int accent) {
         for (Skill skill : skills) {
             if (skill.getPrerequisite() == null) {
@@ -222,25 +261,36 @@ public class SkillTreeScreen extends Screen {
             int y1 = (int) (nodeWorldY(parent) + NODE_SIZE);
             int x2 = (int) (nodeWorldX(skill) + NODE_SIZE / 2.0D);
             int y2 = (int) nodeWorldY(skill);
-            int color = rpg.hasSkill(skill.getId()) ? accent
-                    : rpg.hasSkill(parent.getId()) ? withAlpha(accent, 0x90) : 0xFF34343E;
-            graphics.fill(x1 - 1, y1, x1 + 1, (y1 + y2) / 2, color);
-            graphics.fill(Math.min(x1, x2) - 1, (y1 + y2) / 2 - 1,
-                    Math.max(x1, x2) + 1, (y1 + y2) / 2 + 1, color);
-            graphics.fill(x2 - 1, (y1 + y2) / 2, x2 + 1, y2, color);
+            boolean lit = rpg.hasSkill(skill.getId());
+            boolean reachable = rpg.hasSkill(parent.getId());
+            connector(graphics, x1, y1, x2, y2, accent, lit || reachable, lit);
+        }
+    }
+
+    /** Draws a connector, optionally lit, with a moving pulse when unlocked. */
+    private void connector(GuiGraphics graphics, int x1, int y1, int x2, int y2,
+                           int accent, boolean reachable, boolean lit) {
+        int color = lit ? accent : reachable ? withAlpha(accent, 0x88) : 0xFF2C2C38;
+        thickLine(graphics, x1, y1, x2, y2, color, lit ? 3 : 2);
+        if (lit) {
+            double p = (System.currentTimeMillis() % 1400L) / 1400.0D;
+            int px = (int) (x1 + (x2 - x1) * p);
+            int py = (int) (y1 + (y2 - y1) * p);
+            fillDisc(graphics, px, py, 3, 0xFFFFFFFF);
+            fillDisc(graphics, px, py, 5, withAlpha(0xFFFFFFFF, 0x55));
         }
     }
 
     /** Renders one node; returns true when the mouse hovers it. */
     private boolean renderNode(GuiGraphics graphics, Skill skill, PlayerRpg rpg,
                                int accent, int mouseX, int mouseY) {
-        int x = (int) nodeWorldX(skill);
-        int y = (int) nodeWorldY(skill);
+        int cx = (int) (nodeWorldX(skill) + NODE_SIZE / 2.0D);
+        int cy = (int) (nodeWorldY(skill) + NODE_SIZE / 2.0D);
         boolean unlocked = rpg.hasSkill(skill.getId());
         boolean unlockable = SkillTrees.canUnlock(rpg, skill);
         boolean hovered = isNodeHovered(skill, mouseX, mouseY);
+        int r = NODE_SIZE / 2;
 
-        // Unlock pop animation: node briefly scales up and emits a ring.
         Long animStart = unlockAnimations.get(skill.getId());
         float anim = 0.0F;
         if (animStart != null) {
@@ -252,33 +302,51 @@ public class SkillTreeScreen extends Screen {
 
         graphics.pose().pushPose();
         if (anim > 0.0F) {
-            float scale = 1.0F + 0.25F * anim;
-            graphics.pose().translate(x + NODE_SIZE / 2.0F, y + NODE_SIZE / 2.0F, 0);
+            float scale = 1.0F + 0.3F * anim;
+            graphics.pose().translate(cx, cy, 0);
             graphics.pose().scale(scale, scale, 1.0F);
-            graphics.pose().translate(-(x + NODE_SIZE / 2.0F), -(y + NODE_SIZE / 2.0F), 0);
+            graphics.pose().translate(-cx, -cy, 0);
         }
 
-        int border = unlocked ? accent
+        // Glow: strong for unlocked, pulsing for unlockable.
+        if (unlocked) {
+            glow(graphics, cx, cy, r + 8, withAlpha(accent, 0x66));
+        } else if (unlockable) {
+            glow(graphics, cx, cy, r + 6, withAlpha(0xFFFFFFFF, pulseAlpha() / 2));
+        }
+
+        // Body + ring.
+        fillDisc(graphics, cx, cy, r + 2, 0xFF0C0C14);
+        fillDisc(graphics, cx, cy, r, 0xFF15151F);
+        int ringColor = unlocked ? accent
                 : unlockable ? (hovered ? 0xFFFFFFFF : withAlpha(0xFFFFFFFF, pulseAlpha()))
-                : 0xFF2A2A34;
-        graphics.fill(x - 2, y - 2, x + NODE_SIZE + 2, y + NODE_SIZE + 2, border);
-        graphics.fill(x - 1, y - 1, x + NODE_SIZE + 1, y + NODE_SIZE + 1, 0xFF10101A);
-        graphics.blit(SkillIcons.get(skill.getId()), x, y, NODE_SIZE, NODE_SIZE,
+                : 0xFF33333F;
+        ring(graphics, cx, cy, r, ringColor, 2);
+
+        // Icon.
+        int is = NODE_SIZE - 8;
+        graphics.blit(SkillIcons.get(skill.getId()), cx - is / 2, cy - is / 2, is, is,
                 0.0F, 0.0F, SkillIcons.SIZE, SkillIcons.SIZE, SkillIcons.SIZE, SkillIcons.SIZE);
         if (!unlocked) {
-            graphics.fill(x, y, x + NODE_SIZE, y + NODE_SIZE, unlockable ? 0x50000000 : COLOR_LOCKED);
+            fillDisc(graphics, cx, cy, r - 1, unlockable ? 0x33000000 : 0xB0000000);
         }
-        if (anim > 0.0F) {
-            int ring = (int) (6 + 14 * (1.0F - anim));
-            int alpha = (int) (0xFF * anim);
-            int ringColor = withAlpha(accent, alpha);
-            graphics.fill(x - ring, y - ring, x + NODE_SIZE + ring, y - ring + 1, ringColor);
-            graphics.fill(x - ring, y + NODE_SIZE + ring - 1, x + NODE_SIZE + ring, y + NODE_SIZE + ring, ringColor);
-            graphics.fill(x - ring, y - ring, x - ring + 1, y + NODE_SIZE + ring, ringColor);
-            graphics.fill(x + NODE_SIZE + ring - 1, y - ring, x + NODE_SIZE + ring, y + NODE_SIZE + ring, ringColor);
-        }
+        // Supreme skills get a small crown mark.
         graphics.pose().popPose();
         return hovered;
+    }
+
+    private void renderHeader(GuiGraphics graphics, PlayerRpg rpg, int accent) {
+        // Big tree name + unlocked count, centered above the canvas.
+        Component title = currentTree.getDisplayName();
+        int unlocked = SkillTrees.unlockedInTree(rpg, currentTree);
+        int total = SkillTrees.byTree(currentTree).size();
+        graphics.pose().pushPose();
+        graphics.pose().translate(width / 2.0F, canvasTop() + 3, 0);
+        graphics.pose().scale(1.3F, 1.3F, 1.0F);
+        graphics.drawCenteredString(font, title, 0, 0, accent);
+        graphics.pose().popPose();
+        graphics.drawCenteredString(font, unlocked + " / " + total,
+                width / 2, canvasTop() + 16, COLOR_MUTED);
     }
 
     private void renderFooter(GuiGraphics graphics, PlayerRpg rpg) {
@@ -286,14 +354,13 @@ public class SkillTreeScreen extends Screen {
                 Component.translatable("screen.magik.skill_points", rpg.getSkillPoints()),
                 8, height - 18, COLOR_TEXT);
 
-        // Slot assignment preview on the right.
         int slotSize = 18;
-        int x = width - (PlayerRpg.SKILL_SLOTS * (slotSize + 2)) - 6;
+        int x = width / 2 - (PlayerRpg.SKILL_SLOTS * (slotSize + 2)) / 2;
         int y = height - slotSize - 4;
         for (int slot = 0; slot < PlayerRpg.SKILL_SLOTS; slot++) {
             int sx = x + slot * (slotSize + 2);
-            graphics.fill(sx, y, sx + slotSize, y + slotSize, COLOR_BORDER);
-            graphics.fill(sx + 1, y + 1, sx + slotSize - 1, y + slotSize - 1, 0xFF15151E);
+            graphics.fill(sx - 1, y - 1, sx + slotSize + 1, y + slotSize + 1, 0xFF3A3A4A);
+            graphics.fill(sx, y, sx + slotSize, y + slotSize, 0xFF15151E);
             String skillId = rpg.getSkillSlots()[slot];
             if (skillId != null) {
                 graphics.blit(SkillIcons.get(skillId), sx + 1, y + 1, slotSize - 2, slotSize - 2,
@@ -301,8 +368,6 @@ public class SkillTreeScreen extends Screen {
             }
             graphics.drawString(font, String.valueOf(slot + 1), sx + 2, y - 9, COLOR_MUTED);
         }
-        graphics.drawCenteredString(font,
-                Component.translatable("screen.magik.zoom_hint"), width / 2, height - 18, 0xFF55555F);
     }
 
     private void renderSkillTooltip(GuiGraphics graphics, Skill skill, PlayerRpg rpg, int mouseX, int mouseY) {
@@ -337,6 +402,9 @@ public class SkillTreeScreen extends Screen {
             lines.add(Component.translatable("tooltip.magik.requires_staff")
                     .withStyle(ChatFormatting.DARK_PURPLE));
         }
+        if (skill.getTree() == SkillTrees.Tree.DAGGER) {
+            lines.add(Component.translatable("tooltip.magik.dagger_dual").withStyle(ChatFormatting.DARK_PURPLE));
+        }
         if (skill.getPrerequisite() != null) {
             Skill prerequisite = SkillTrees.get(skill.getPrerequisite());
             if (prerequisite != null) {
@@ -360,7 +428,7 @@ public class SkillTreeScreen extends Screen {
     }
 
     // ------------------------------------------------------------------
-    // Input: zoom, pan, unlock, slot assignment
+    // Input
     // ------------------------------------------------------------------
 
     @Override
@@ -370,7 +438,6 @@ public class SkillTreeScreen extends Screen {
         }
         double factor = delta > 0 ? 1.15D : 1.0D / 1.15D;
         double newZoom = Mth.clamp(zoom * factor, 0.5D, 2.5D);
-        // Zoom towards the cursor: keep the world point under it fixed.
         double worldX = (mouseX - panX) / zoom;
         double worldY = (mouseY - panY) / zoom;
         zoom = newZoom;
@@ -398,7 +465,6 @@ public class SkillTreeScreen extends Screen {
 
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        // A short drag is a click: try to unlock the hovered node.
         if (button == 0 && dragDistance < 4.0D
                 && mouseY >= canvasTop() && mouseY <= canvasBottom()) {
             PlayerRpg rpg = ClientRpgData.get();
@@ -414,7 +480,6 @@ public class SkillTreeScreen extends Screen {
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        // Hover an unlocked active skill and press 1-4 to bind it to a slot.
         if (keyCode >= GLFW.GLFW_KEY_1 && keyCode <= GLFW.GLFW_KEY_4) {
             int slot = keyCode - GLFW.GLFW_KEY_1;
             PlayerRpg rpg = ClientRpgData.get();
@@ -436,7 +501,7 @@ public class SkillTreeScreen extends Screen {
     }
 
     // ------------------------------------------------------------------
-    // Helpers
+    // Draw helpers
     // ------------------------------------------------------------------
 
     private boolean isNodeHovered(Skill skill, double mouseX, double mouseY) {
@@ -445,8 +510,63 @@ public class SkillTreeScreen extends Screen {
         }
         double worldX = (mouseX - panX) / zoom;
         double worldY = (mouseY - panY) / zoom;
-        return worldX >= nodeWorldX(skill) && worldX < nodeWorldX(skill) + NODE_SIZE
-                && worldY >= nodeWorldY(skill) && worldY < nodeWorldY(skill) + NODE_SIZE;
+        double cx = nodeWorldX(skill) + NODE_SIZE / 2.0D;
+        double cy = nodeWorldY(skill) + NODE_SIZE / 2.0D;
+        double dx = worldX - cx, dy = worldY - cy;
+        return dx * dx + dy * dy <= (NODE_SIZE / 2.0D + 1) * (NODE_SIZE / 2.0D + 1);
+    }
+
+    private void fillDisc(GuiGraphics graphics, int cx, int cy, int r, int color) {
+        for (int dy = -r; dy <= r; dy++) {
+            int dx = (int) Math.sqrt((double) r * r - dy * dy);
+            graphics.fill(cx - dx, cy + dy, cx + dx + 1, cy + dy + 1, color);
+        }
+    }
+
+    private void ring(GuiGraphics graphics, int cx, int cy, int r, int color, int thickness) {
+        for (int dy = -r; dy <= r; dy++) {
+            int outer = (int) Math.sqrt((double) r * r - dy * dy);
+            int innerR = Math.max(0, r - thickness);
+            int inner = dy >= -innerR && dy <= innerR
+                    ? (int) Math.sqrt((double) innerR * innerR - dy * dy) : -1;
+            if (inner < 0) {
+                graphics.fill(cx - outer, cy + dy, cx + outer + 1, cy + dy + 1, color);
+            } else {
+                graphics.fill(cx - outer, cy + dy, cx - inner, cy + dy + 1, color);
+                graphics.fill(cx + inner + 1, cy + dy, cx + outer + 1, cy + dy + 1, color);
+            }
+        }
+    }
+
+    /** Soft glow: a few translucent discs of decreasing size. */
+    private void glow(GuiGraphics graphics, int cx, int cy, int r, int color) {
+        int a = (color >>> 24) & 0xFF;
+        for (int i = 3; i >= 1; i--) {
+            int rr = r * i / 3;
+            fillDisc(graphics, cx, cy, rr, withAlpha(color, a / (4 - i)));
+        }
+    }
+
+    private void thickLine(GuiGraphics graphics, int x1, int y1, int x2, int y2, int color, int thickness) {
+        int dx = Math.abs(x2 - x1), dy = Math.abs(y2 - y1);
+        int sx = x1 < x2 ? 1 : -1, sy = y1 < y2 ? 1 : -1;
+        int err = dx - dy;
+        int half = thickness / 2;
+        while (true) {
+            graphics.fill(x1 - half, y1 - half, x1 + half + 1, y1 + half + 1, color);
+            if (x1 == x2 && y1 == y2) {
+                break;
+            }
+            int e2 = 2 * err;
+            if (e2 > -dy) {
+                err -= dy;
+                x1 += sx;
+            }
+            if (e2 < dx) {
+                err += dx;
+                y1 += sy;
+            }
+        }
     }
 
     private void trackUnlockAnimations(PlayerRpg rpg) {
@@ -455,6 +575,7 @@ public class SkillTreeScreen extends Screen {
                 unlockAnimations.put(skillId, System.currentTimeMillis());
             }
         }
+        knownUnlocked.retainAll(rpg.getUnlockedSkills()); // Reset after a respec.
     }
 
     private int pulseAlpha() {
@@ -463,6 +584,17 @@ public class SkillTreeScreen extends Screen {
 
     private static int withAlpha(int color, int alpha) {
         return (Mth.clamp(alpha, 0, 255) << 24) | (color & 0x00FFFFFF);
+    }
+
+    /** Linear blend of two ARGB colors toward b by t (keeps a's alpha). */
+    private static int blend(int a, int b, float t) {
+        int aa = (a >>> 24) & 0xFF;
+        int ar = (a >> 16) & 0xFF, ag = (a >> 8) & 0xFF, ab = a & 0xFF;
+        int br = (b >> 16) & 0xFF, bg = (b >> 8) & 0xFF, bb = b & 0xFF;
+        int rr = (int) (ar + (br - ar) * t);
+        int rg = (int) (ag + (bg - ag) * t);
+        int rb = (int) (ab + (bb - ab) * t);
+        return (aa << 24) | (rr << 16) | (rg << 8) | rb;
     }
 
     @Override

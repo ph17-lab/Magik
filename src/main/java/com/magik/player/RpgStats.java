@@ -2,7 +2,6 @@ package com.magik.player;
 
 import com.magik.config.MagikServerConfig;
 import com.magik.config.SkillBalance;
-import com.magik.item.ArcaniteArmorItem;
 import com.magik.skills.SkillTrees;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
@@ -38,9 +37,6 @@ public final class RpgStats {
     public static float maxMana(PlayerRpg rpg, Player player) {
         float max = (float) (MagikServerConfig.BASE_MAX_MANA.get()
                 + MagikServerConfig.MANA_PER_INTELLIGENCE.get() * rpg.getAttribute(RpgAttribute.INTELLIGENCE));
-        if (ArcaniteArmorItem.hasFullSet(player)) {
-            max += ARCANITE_SET_MANA_BONUS;
-        }
         return max;
     }
 

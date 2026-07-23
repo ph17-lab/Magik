@@ -1,6 +1,0 @@
-{
-  "parent": "magik:item/arcane_bow",
-  "textures": {
-    "layer0": "magik:item/arcane_bow_pulling_0"
-  }
-}

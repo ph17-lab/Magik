@@ -250,5 +250,6 @@
   "skill.magik.dagger_dance": "Dança das Adagas",
   "skill.magik.dagger_dance.desc": "Sequência de ataques extremamente rápidos enquanto a Stamina durar; cada golpe aumenta a velocidade de ataque.",
   "skill.magik.shadow_master": "Mestre das Sombras",
-  "skill.magik.shadow_master.desc": "Aumenta permanentemente velocidade de ataque, chance de crítico, dano com adagas e velocidade de movimento. Reduz a recarga das habilidades de adaga. Ao eliminar um inimigo, entra em furtividade aprimorada."
+  "skill.magik.shadow_master.desc": "Aumenta permanentemente velocidade de ataque, chance de crítico, dano com adagas e velocidade de movimento. Reduz a recarga das habilidades de adaga. Ao eliminar um inimigo, entra em furtividade aprimorada.",
+  "screen.magik.respec": "Resetar Skills"
 }

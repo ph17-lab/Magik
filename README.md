@@ -16,11 +16,12 @@ Um mod RPG completo, moderno e otimizado para **Minecraft Java Edition 1.20.1 + 
 | **Classe Adaga** | Nova classe furtiva com 8 habilidades (Golpe Veloz, Véu das Sombras, Punhalada nas Costas com teleporte...). A adaga só funciona empunhando **uma em cada mão** |
 | **Arcano Avançado** | 15 magias de cajado (Orbe das Sombras, Chuva de Meteoros, Raio do Caos, Fissura Dimensional...) — requer Inteligência 50 e cajado em mãos; ao atingir Int 50 o jogador recebe o **Cajado Arcano Avançado** (roxo/preto, orbe roxo) |
 | **Classes livres** | Sem classe fixa; títulos por progressão (Aprendiz → Lenda), nível máximo 150 |
-| **Arsenal** | 3 espadas 3D, adaga 3D dual-wield, 3 armas pesadas 3D (2 machados + warhammer), 6 arcos, 6 escudos 3D, 2 cajados 3D (GeckoLib), armadura Arcanita |
+| **Arsenal** | 2 cajados 3D (GeckoLib) + poções e cristal de mana. As armas de corpo-a-corpo/arco foram removidas: as árvores agora fortalecem armas do **vanilla** e do **Spartan Weaponry** |
 | **Raridades** | Comum → Incomum → Raro → Épico → **Lendário** → **Mítico** |
 | **Requisitos** | Nível e atributos mínimos por equipamento (tooltip colorido) |
 | **HUD** | Barra de Vida/Mana/Stamina (corações vanilla ocultos), nível+título, XP animado, 4 slots de habilidade com cooldown |
-| **Compatibilidade** | Better Combat (opcional): armas de corpo-a-corpo têm `weapon_attributes` para combos/alcance |
+| **Compatibilidade** | **Spartan Weaponry** (opcional): adagas, espadões, martelos, alabardas etc. são reconhecidos pelas árvores. Better Combat opcional nos cajados |
+| **Árvore de skills** | Redesenhada: nó-raiz por classe, nós circulares com brilho, conectores animados, fundo temático e **botão de resetar skills (respec)** |
 
 ## Controles (padrão)
 

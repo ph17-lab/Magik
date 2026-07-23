@@ -19,38 +19,9 @@ public final class ModCreativeTabs {
                     .title(Component.translatable("itemGroup.magik"))
                     .icon(() -> new ItemStack(ModItems.STAFF.get()))
                     .displayItems((parameters, output) -> {
-                        // Swords
-                        output.accept(ModItems.SWIFT_BLADE.get());
-                        output.accept(ModItems.KNIGHT_SWORD.get());
-                        output.accept(ModItems.CRYSTAL_BLADE.get());
-                        // Daggers
-                        output.accept(ModItems.SHADOW_DAGGER.get());
-                        // Heavy weapons
-                        output.accept(ModItems.WARHAMMER.get());
-                        output.accept(ModItems.BATTLE_AXE.get());
-                        output.accept(ModItems.GIANT_AXE.get());
-                        // Bows
-                        output.accept(ModItems.SHORT_BOW.get());
-                        output.accept(ModItems.LONG_BOW.get());
-                        output.accept(ModItems.COMPOSITE_BOW.get());
-                        output.accept(ModItems.ELVISH_BOW.get());
-                        output.accept(ModItems.ARCANE_BOW.get());
-                        output.accept(ModItems.LEGENDARY_BOW.get());
-                        // Shields
-                        output.accept(ModItems.WOODEN_SHIELD.get());
-                        output.accept(ModItems.IRON_SHIELD.get());
-                        output.accept(ModItems.GOLDEN_SHIELD.get());
-                        output.accept(ModItems.DIAMOND_SHIELD.get());
-                        output.accept(ModItems.OBSIDIAN_SHIELD.get());
-                        output.accept(ModItems.LEGENDARY_SHIELD.get());
                         // Staves
                         output.accept(ModItems.STAFF.get());
                         output.accept(ModItems.ADVANCED_STAFF.get());
-                        // Armor
-                        output.accept(ModItems.ARCANITE_HELMET.get());
-                        output.accept(ModItems.ARCANITE_CHESTPLATE.get());
-                        output.accept(ModItems.ARCANITE_LEGGINGS.get());
-                        output.accept(ModItems.ARCANITE_BOOTS.get());
                         // Consumables & materials
                         output.accept(ModItems.MANA_POTION.get());
                         output.accept(ModItems.STAMINA_DRAUGHT.get());

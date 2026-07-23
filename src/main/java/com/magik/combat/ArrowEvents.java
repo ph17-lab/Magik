@@ -49,12 +49,8 @@ public final class ArrowEvents {
         }
 
         // Long Range / Precision: faster arrows fly farther and straighter.
+        // Works with any bow (vanilla or Spartan Weaponry).
         float multiplier = RpgStats.arrowVelocityMultiplier(rpg);
-        if (shooter.getMainHandItem().getItem() instanceof com.magik.item.RpgBowItem bow) {
-            multiplier *= bow.getVelocityMultiplier();
-        } else if (shooter.getOffhandItem().getItem() instanceof com.magik.item.RpgBowItem bow) {
-            multiplier *= bow.getVelocityMultiplier();
-        }
         arrow.setDeltaMovement(arrow.getDeltaMovement().scale(multiplier));
 
         // Special arrow buffs armed by active skills: tag this arrow, consume the buff.

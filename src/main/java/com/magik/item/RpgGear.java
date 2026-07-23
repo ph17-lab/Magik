@@ -77,8 +77,7 @@ public interface RpgGear {
 
     /** Flat damage reduction of the shield currently raised, if any. */
     static float heldShieldFlatReduction(Player player) {
-        return player.getUseItem().getItem() instanceof RpgShieldItem shield
-                ? shield.getFlatBlockReduction() : 0.0F;
+        return 0.0F;
     }
 
     // ------------------------------------------------------------------

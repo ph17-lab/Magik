@@ -250,5 +250,6 @@
   "skill.magik.dagger_dance": "Dagger Dance",
   "skill.magik.dagger_dance.desc": "An extremely fast attack sequence while Stamina lasts; each hit raises attack speed.",
   "skill.magik.shadow_master": "Shadow Master",
-  "skill.magik.shadow_master.desc": "Permanently increases attack speed, crit chance, dagger damage and movement speed. Reduces dagger skill cooldowns. Killing an enemy grants enhanced stealth."
+  "skill.magik.shadow_master.desc": "Permanently increases attack speed, crit chance, dagger damage and movement speed. Reduces dagger skill cooldowns. Killing an enemy grants enhanced stealth.",
+  "screen.magik.respec": "Reset Skills"
 }

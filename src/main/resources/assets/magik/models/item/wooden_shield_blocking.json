@@ -1,6 +1,0 @@
-{
-  "parent": "magik:item/shield_base_blocking",
-  "textures": {
-    "base": "magik:item/wooden_shield"
-  }
-}
