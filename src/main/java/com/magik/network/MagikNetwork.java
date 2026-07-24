@@ -75,6 +75,12 @@ public final class MagikNetwork {
                 .decoder(RespecPacket::decode)
                 .consumerMainThread(RespecPacket::handle)
                 .add();
+
+        CHANNEL.messageBuilder(WaypointPacket.class, id++, NetworkDirection.PLAY_TO_SERVER)
+                .encoder(WaypointPacket::encode)
+                .decoder(WaypointPacket::decode)
+                .consumerMainThread(WaypointPacket::handle)
+                .add();
     }
 
     /** Sends the complete RPG state to the owning client. */

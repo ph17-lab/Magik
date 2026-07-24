@@ -71,14 +71,14 @@ public final class CombatEvents {
 
         // Execution: heavy bonus against low-health enemies.
         if (rpg.hasSkill(SkillTrees.W_EXECUTE)
-                && target.getHealth() < target.getMaxHealth() * 0.30F) {
-            amount *= 1.6F;
+                && target.getHealth() < target.getMaxHealth() * 0.25F) {
+            amount *= 1.4F;
             spawn(attacker, target, ParticleTypes.DAMAGE_INDICATOR, 10);
         }
         // Berserk: bonus damage while the attacker is at low health.
         if (rpg.hasSkill(SkillTrees.W_BERSERK)
                 && attacker.getHealth() < attacker.getMaxHealth() * 0.40F) {
-            amount *= 1.25F;
+            amount *= 1.2F;
         }
         // Critical strike.
         if (attacker.getRandom().nextFloat() < RpgStats.critChance(rpg) + RpgGear.heldCritBonus(attacker)) {
@@ -128,7 +128,7 @@ public final class CombatEvents {
         if (event.getSource().getEntity() instanceof ServerPlayer player) {
             PlayerRpgProvider.get(player).ifPresent(rpg -> {
                 if (rpg.hasSkill(SkillTrees.W_LIFESTEAL) && player.getHealth() < player.getMaxHealth()) {
-                    player.heal(4.0F);
+                    player.heal(3.0F);
                     spawn(player, player, ParticleTypes.HEART, 4);
                 }
             });

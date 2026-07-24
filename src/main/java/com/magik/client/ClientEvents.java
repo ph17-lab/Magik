@@ -46,6 +46,23 @@ public final class ClientEvents {
             MagikNetwork.CHANNEL.sendToServer(new DashPacket());
         }
 
+        PlayerRpg data = ClientRpgData.get();
+        while (KeyBindings.MINIMAP_ZOOM.consumeClick()) {
+            if (data.hasSkill(SkillTrees.EX_ZOOM)) {
+                com.magik.client.map.MinimapRenderer.INSTANCE.cycleZoom();
+            }
+        }
+        while (KeyBindings.ADD_WAYPOINT.consumeClick()) {
+            if (data.hasSkill(SkillTrees.EX_WAYPOINTS)) {
+                MagikNetwork.CHANNEL.sendToServer(new com.magik.network.WaypointPacket(true, ""));
+            }
+        }
+        while (KeyBindings.OPEN_MAP.consumeClick()) {
+            if (minecraft.screen == null && data.hasSkill(SkillTrees.EX_FULLMAP)) {
+                minecraft.setScreen(new com.magik.client.map.FullMapScreen());
+            }
+        }
+
         PlayerRpg rpg = ClientRpgData.get();
         for (int slot = 0; slot < KeyBindings.SKILL_SLOTS.length; slot++) {
             while (KeyBindings.SKILL_SLOTS[slot].consumeClick()) {

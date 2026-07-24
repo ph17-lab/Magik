@@ -158,11 +158,21 @@ public class SkillTreeScreen extends Screen {
     private double nodeWorldX(Skill skill) {
         int branches = SkillTrees.branchCount(skill.getTree());
         double spacing = BRANCH_OFFSET_X * 2.0D;
-        return (skill.getBranch() - (branches - 1) / 2.0D) * spacing - NODE_SIZE / 2.0D;
+        double base = (skill.getBranch() - (branches - 1) / 2.0D) * spacing - NODE_SIZE / 2.0D;
+        return base + jitter(skill.getId(), 0) * 26.0D;
     }
 
     private double nodeWorldY(Skill skill) {
-        return skill.getTier() * TIER_SPACING_Y;
+        return skill.getTier() * TIER_SPACING_Y + jitter(skill.getId(), 1) * 18.0D;
+    }
+
+    /** Deterministic [-1..1] offset per skill so the tree reads organically, not as rigid columns. */
+    private static double jitter(String id, int axis) {
+        int h = id.hashCode() * 73856093 ^ (axis * 19349663);
+        h ^= (h >>> 13);
+        h *= 0x5bd1e995;
+        h ^= (h >>> 15);
+        return ((h & 0xFFFF) / 65535.0D) * 2.0D - 1.0D;
     }
 
     // ------------------------------------------------------------------

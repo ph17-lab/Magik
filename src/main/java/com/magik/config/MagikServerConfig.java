@@ -46,9 +46,9 @@ public final class MagikServerConfig {
                 .defineInRange("xpCurveBase", 80.0D, 1.0D, 100000.0D);
         XP_CURVE_EXPONENT = b.defineInRange("xpCurveExponent", 1.55D, 1.0D, 4.0D);
         ATTRIBUTE_POINTS_PER_LEVEL = b.comment("Attribute points granted on each level up.")
-                .defineInRange("attributePointsPerLevel", 3, 0, 100);
-        MAX_ATTRIBUTE = b.comment("Maximum value a single attribute can reach.")
-                .defineInRange("maxAttribute", 100, 1, 10000);
+                .defineInRange("attributePointsPerLevel", 2, 0, 100);
+        MAX_ATTRIBUTE = b.comment("Maximum value a single attribute can reach (kept low for a Vanilla+ feel).")
+                .defineInRange("maxAttribute", 30, 1, 10000);
         SKILL_POINTS_PER_LEVEL = b.comment("Skill points granted on each level up.")
                 .defineInRange("skillPointsPerLevel", 5, 0, 100);
         b.pop();

@@ -35,9 +35,9 @@ public final class RpgAttributeApplier {
 
     public static void apply(Player player, PlayerRpg rpg) {
         set(player, Attributes.MAX_HEALTH, VITALITY_HEALTH, "magik.vitality",
-                2.0D * rpg.getAttribute(RpgAttribute.VITALITY), AttributeModifier.Operation.ADDITION);
+                1.0D * rpg.getAttribute(RpgAttribute.VITALITY), AttributeModifier.Operation.ADDITION);
         set(player, Attributes.MAX_HEALTH, W_TOUGH_HEALTH, "magik.tough",
-                rpg.hasSkill(SkillTrees.W_TOUGH) ? 6.0D : 0.0D, AttributeModifier.Operation.ADDITION);
+                rpg.hasSkill(SkillTrees.W_TOUGH) ? 4.0D : 0.0D, AttributeModifier.Operation.ADDITION);
 
         set(player, Attributes.MOVEMENT_SPEED, AGILITY_SPEED, "magik.agility_speed",
                 0.01D * rpg.getAttribute(RpgAttribute.AGILITY), AttributeModifier.Operation.MULTIPLY_TOTAL);
@@ -47,8 +47,8 @@ public final class RpgAttributeApplier {
         set(player, Attributes.ATTACK_SPEED, W_SPEED_ATTACK, "magik.w_speed",
                 rpg.hasSkill(SkillTrees.W_SPEED) ? 0.15D : 0.0D, AttributeModifier.Operation.MULTIPLY_TOTAL);
 
-        set(player, Attributes.ATTACK_DAMAGE, W_POWER_DAMAGE, "magik.w_power",
-                rpg.hasSkill(SkillTrees.W_POWER) ? 2.0D : 0.0D, AttributeModifier.Operation.ADDITION);
+        // W_POWER's bonus is applied as a multiplier in CombatEvents, so no
+        // flat attack-damage modifier here (avoids double-dipping).
 
         // Builder + Miner reach (Forge block-interaction range).
         double reach = 0.0D;

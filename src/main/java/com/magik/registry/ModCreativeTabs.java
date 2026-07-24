@@ -22,6 +22,10 @@ public final class ModCreativeTabs {
                         // Staves
                         output.accept(ModItems.STAFF.get());
                         output.accept(ModItems.ADVANCED_STAFF.get());
+                        // Explorer compasses
+                        output.accept(ModItems.WAYPOINT_COMPASS.get());
+                        output.accept(ModItems.BIOME_COMPASS.get());
+                        output.accept(ModItems.STRUCTURE_COMPASS.get());
                         // Consumables & materials
                         output.accept(ModItems.MANA_POTION.get());
                         output.accept(ModItems.STAMINA_DRAUGHT.get());

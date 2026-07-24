@@ -59,32 +59,32 @@ public final class RpgStats {
     public static final float CRIT_MULTIPLIER = 1.5F;
     public static final int OUT_OF_COMBAT_TICKS = 100;
 
-    /** Flat extra melee damage multiplier from the Warrior tree. */
+    /** Flat extra melee damage multiplier from the Warrior tree (Vanilla+ tuned). */
     public static float warriorDamageMultiplier(PlayerRpg rpg) {
-        float m = 1.0F + 0.03F * rpg.getAttribute(RpgAttribute.STRENGTH);
+        float m = 1.0F + 0.015F * rpg.getAttribute(RpgAttribute.STRENGTH);
         if (rpg.hasSkill(SkillTrees.W_POWER)) {
-            m += 0.15F;
+            m += 0.10F;
         }
         return m;
     }
 
-    /** Critical chance [0..0.75]. */
+    /** Critical chance [0..0.5]. */
     public static float critChance(PlayerRpg rpg) {
-        float chance = 0.01F * rpg.getAttribute(RpgAttribute.PRECISION);
+        float chance = 0.005F * rpg.getAttribute(RpgAttribute.PRECISION);
         if (rpg.hasSkill(SkillTrees.W_CRIT)) {
-            chance += 0.15F;
+            chance += 0.08F;
         }
-        return Math.min(0.75F, chance);
+        return Math.min(0.5F, chance);
     }
 
-    /** Fraction [0..0.85] of incoming damage removed by Resistance + Warrior toughness. */
+    /** Fraction [0..0.6] of incoming damage removed by Resistance + Warrior toughness. */
     public static float damageReduction(PlayerRpg rpg) {
         int resistance = rpg.getAttribute(RpgAttribute.RESISTANCE);
-        float reduction = resistance / (resistance + 60.0F);
+        float reduction = resistance / (resistance + 90.0F);
         if (rpg.hasSkill(SkillTrees.W_TOUGH)) {
-            reduction += (1.0F - reduction) * 0.10F;
+            reduction += (1.0F - reduction) * 0.08F;
         }
-        return Math.min(0.85F, reduction);
+        return Math.min(0.6F, reduction);
     }
 
     /** Extra reduction while blocking (Warrior block + parry). */
@@ -111,10 +111,9 @@ public final class RpgStats {
 
     /** Block breaking speed multiplier (Mining attribute + Miner speed). */
     public static float miningSpeedMultiplier(PlayerRpg rpg) {
-        float m = 1.0F + 0.03F * rpg.getAttribute(RpgAttribute.MINING)
-                + 0.004F * rpg.getAttribute(RpgAttribute.AGILITY);
+        float m = 1.0F + 0.02F * rpg.getAttribute(RpgAttribute.MINING);
         if (rpg.hasSkill(SkillTrees.MI_SPEED)) {
-            m += 0.30F;
+            m += 0.25F;
         }
         return m;
     }

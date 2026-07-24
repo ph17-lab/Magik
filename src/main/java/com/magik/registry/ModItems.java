@@ -4,6 +4,7 @@ import com.magik.MagikMod;
 import com.magik.entity.MagicBoltEntity;
 import com.magik.item.ItemRequirements;
 import com.magik.item.RpgConsumableItem;
+import com.magik.item.SpecialCompassItem;
 import com.magik.item.StaffItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Rarity;
@@ -65,6 +66,22 @@ public final class ModItems {
                     ItemRequirements.of(20, INTELLIGENCE, 50),
                     MagikMod.id("textures/item/advanced_staff.png"),
                     new Item.Properties().durability(1200).rarity(ModRarities.MYTHIC)));
+
+    // ------------------------------------------------------------------
+    // Explorer compasses (needle points to the located target)
+    // ------------------------------------------------------------------
+
+    public static final RegistryObject<Item> WAYPOINT_COMPASS = ITEMS.register("waypoint_compass",
+            () -> new SpecialCompassItem(SpecialCompassItem.Mode.WAYPOINT,
+                    new Item.Properties().stacksTo(1)));
+
+    public static final RegistryObject<Item> BIOME_COMPASS = ITEMS.register("biome_compass",
+            () -> new SpecialCompassItem(SpecialCompassItem.Mode.BIOME,
+                    new Item.Properties().stacksTo(1)));
+
+    public static final RegistryObject<Item> STRUCTURE_COMPASS = ITEMS.register("structure_compass",
+            () -> new SpecialCompassItem(SpecialCompassItem.Mode.STRUCTURE,
+                    new Item.Properties().stacksTo(1)));
 
     private ModItems() {
     }
