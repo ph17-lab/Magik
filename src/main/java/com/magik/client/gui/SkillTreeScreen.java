@@ -48,17 +48,18 @@ public class SkillTreeScreen extends Screen {
     /** Accent color of each tree. */
     private static int accent(SkillTrees.Tree tree) {
         return switch (tree) {
+            case WARRIOR -> 0xFFD84A4A;
+            case MINER -> 0xFF8A8A96;
+            case FARMER -> 0xFF6FBF3F;
+            case LUMBERJACK -> 0xFFB07A3C;
+            case BUILDER -> 0xFFE0A73C;
+            case FISHER -> 0xFF3FA6D8;
+            case EXPLORER -> 0xFF5BC0B0;
             case ARCANE -> 0xFFB13BD8;
-            case SWORDSMAN -> 0xFFD84A4A;
-            case ARCHER -> 0xFF5BBF3F;
-            case HEAVY -> 0xFFC9862E;
-            case DEFENSE -> 0xFFE3C55A;
-            case ADVANCED_ARCANE -> 0xFF8A2BE2;
-            case DAGGER -> 0xFF9B59D0;
         };
     }
 
-    private SkillTrees.Tree currentTree = SkillTrees.Tree.ARCANE;
+    private SkillTrees.Tree currentTree = SkillTrees.Tree.WARRIOR;
 
     private double panX;
     private double panY;
@@ -85,13 +86,23 @@ public class SkillTreeScreen extends Screen {
                 .bounds(6, 6, backWidth, 18)
                 .build());
 
-        int trees = SkillTrees.Tree.values().length;
+        // Only show trees that are available (Arcane is hidden without Iron's Spells).
+        java.util.List<SkillTrees.Tree> available = new java.util.ArrayList<>();
+        for (SkillTrees.Tree tree : SkillTrees.Tree.values()) {
+            if (tree.isAvailable()) {
+                available.add(tree);
+            }
+        }
+        if (!currentTree.isAvailable() && !available.isEmpty()) {
+            currentTree = available.get(0);
+        }
+        int trees = Math.max(1, available.size());
         int tabsLeft = 6 + backWidth + 6;
         int tabsArea = width - tabsLeft - 6;
         int gap = 2;
         int tabWidth = Math.max(28, (tabsArea - (trees - 1) * gap) / trees);
         int x = tabsLeft;
-        for (SkillTrees.Tree tree : SkillTrees.Tree.values()) {
+        for (SkillTrees.Tree tree : available) {
             SkillTrees.Tree tabTree = tree;
             addRenderableWidget(Button.builder(tree.getDisplayName(), button -> {
                         currentTree = tabTree;
@@ -378,32 +389,17 @@ public class SkillTreeScreen extends Screen {
                 ? "active" : "passive")).withStyle(ChatFormatting.GRAY));
         lines.add(skill.getDescription().copy().withStyle(ChatFormatting.WHITE));
 
-        if (skill.getManaCost() > 0) {
-            lines.add(Component.translatable("screen.magik.cost_mana", (int) skill.getManaCost())
-                    .withStyle(ChatFormatting.BLUE));
-        }
-        if (skill.getStaminaCost() > 0) {
-            lines.add(Component.translatable("screen.magik.cost_stamina", (int) skill.getStaminaCost())
-                    .withStyle(ChatFormatting.GREEN));
-        }
-        if (skill.getCooldownTicks() > 0) {
-            lines.add(Component.translatable("screen.magik.cooldown",
-                    String.format("%.1f", skill.getCooldownTicks() / 20.0F)).withStyle(ChatFormatting.GRAY));
-        }
+        boolean pointsMet = rpg.getSkillPoints() >= skill.getPointCost();
+        lines.add(Component.translatable("screen.magik.cost_points", skill.getPointCost())
+                .withStyle(pointsMet ? ChatFormatting.AQUA : ChatFormatting.RED));
         boolean levelMet = rpg.getLevel() >= skill.getRequiredLevel();
         lines.add(Component.translatable("tooltip.magik.requires_level", skill.getRequiredLevel())
                 .withStyle(levelMet ? ChatFormatting.DARK_GREEN : ChatFormatting.RED));
-        if (skill.getTree() == SkillTrees.Tree.ADVANCED_ARCANE) {
-            boolean intMet = rpg.getAttribute(com.magik.player.RpgAttribute.INTELLIGENCE)
-                    >= SkillTrees.ADVANCED_ARCANE_INTELLIGENCE;
-            lines.add(Component.translatable("tooltip.magik.requires_intelligence",
-                            SkillTrees.ADVANCED_ARCANE_INTELLIGENCE)
-                    .withStyle(intMet ? ChatFormatting.DARK_GREEN : ChatFormatting.RED));
-            lines.add(Component.translatable("tooltip.magik.requires_staff")
-                    .withStyle(ChatFormatting.DARK_PURPLE));
-        }
-        if (skill.getTree() == SkillTrees.Tree.DAGGER) {
-            lines.add(Component.translatable("tooltip.magik.dagger_dual").withStyle(ChatFormatting.DARK_PURPLE));
+        if (skill.getQuestId() != null) {
+            boolean questMet = rpg.hasCompletedQuest(skill.getQuestId());
+            lines.add(Component.translatable("tooltip.magik.requires_quest",
+                            Component.translatable("quest.magik." + skill.getQuestId()))
+                    .withStyle(questMet ? ChatFormatting.DARK_GREEN : ChatFormatting.RED));
         }
         if (skill.getPrerequisite() != null) {
             Skill prerequisite = SkillTrees.get(skill.getPrerequisite());

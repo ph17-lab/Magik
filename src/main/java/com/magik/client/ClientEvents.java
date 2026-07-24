@@ -57,18 +57,4 @@ public final class ClientEvents {
         }
     }
 
-    /** Archer "Zoom" passive: the camera zooms in while drawing a bow. */
-    @SubscribeEvent
-    public static void onComputeFov(ViewportEvent.ComputeFov event) {
-        Minecraft minecraft = Minecraft.getInstance();
-        if (minecraft.player == null || !ClientRpgData.get().hasSkill(SkillTrees.ZOOM)) {
-            return;
-        }
-        if (minecraft.player.isUsingItem()
-                && minecraft.player.getUseItem().getItem() instanceof BowItem) {
-            int drawing = minecraft.player.getTicksUsingItem();
-            float zoom = Math.min(1.0F, drawing / 20.0F);
-            event.setFOV(event.getFOV() * (1.0F - 0.45F * zoom));
-        }
-    }
 }

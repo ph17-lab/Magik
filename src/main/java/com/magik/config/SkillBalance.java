@@ -120,9 +120,6 @@ public final class SkillBalance {
         JsonObject skills = new JsonObject();
         for (Skill skill : SkillTrees.all().values()) {
             JsonObject entry = new JsonObject();
-            entry.addProperty("manaCost", skill.getManaCost());
-            entry.addProperty("staminaCost", skill.getStaminaCost());
-            entry.addProperty("cooldownTicks", skill.getCooldownTicks());
             entry.addProperty("requiredLevel", skill.getRequiredLevel());
             skills.add(skill.getId(), entry);
         }

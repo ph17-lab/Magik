@@ -39,8 +39,8 @@ public final class MagikServerConfig {
         ForgeConfigSpec.Builder b = new ForgeConfigSpec.Builder();
 
         b.push("progression");
-        MAX_LEVEL = b.comment("Maximum RPG level a player can reach.")
-                .defineInRange("maxLevel", 150, 1, 10000);
+        MAX_LEVEL = b.comment("Maximum level a player can reach.")
+                .defineInRange("maxLevel", 50, 1, 10000);
         XP_CURVE_BASE = b.comment("XP required to go from level L to L+1 is: base * L ^ exponent.",
                         "Low levels stay fast while high levels become much more demanding.")
                 .defineInRange("xpCurveBase", 80.0D, 1.0D, 100000.0D);
@@ -50,7 +50,7 @@ public final class MagikServerConfig {
         MAX_ATTRIBUTE = b.comment("Maximum value a single attribute can reach.")
                 .defineInRange("maxAttribute", 100, 1, 10000);
         SKILL_POINTS_PER_LEVEL = b.comment("Skill points granted on each level up.")
-                .defineInRange("skillPointsPerLevel", 1, 0, 100);
+                .defineInRange("skillPointsPerLevel", 5, 0, 100);
         b.pop();
 
         b.push("xpSources");

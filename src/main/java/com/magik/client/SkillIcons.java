@@ -17,7 +17,7 @@ public final class SkillIcons {
 
     public static ResourceLocation get(String skillId) {
         if (SkillTrees.get(skillId) == null) {
-            skillId = "fireball";
+            skillId = "w_power";
         }
         return MagikMod.id("textures/gui/skills/" + skillId + ".png");
     }

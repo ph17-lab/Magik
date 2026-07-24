@@ -2,19 +2,11 @@ package com.magik.player;
 
 import com.magik.MagikMod;
 import com.magik.combat.RpgAttributeApplier;
-import com.magik.item.RpgGear;
 import com.magik.network.MagikNetwork;
-import com.magik.skills.SkillCasting;
-import com.magik.skills.SkillFx;
-import com.magik.skills.SkillTrees;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.sounds.SoundEvents;
-import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.common.capabilities.RegisterCapabilitiesEvent;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.TickEvent;
@@ -116,87 +108,10 @@ public final class RpgEvents {
                 rpg.setStamina(maxStamina);
             }
 
-            // Regeneration passive: slow healing while out of combat.
-            if (rpg.hasSkill(SkillTrees.REGENERATION)
-                    && player.getHealth() < player.getMaxHealth()
-                    && gameTime - rpg.getLastCombatTime() >= RpgStats.OUT_OF_COMBAT_TICKS
-                    && gameTime % 40 == 0) {
-                player.heal(1.0F);
-            }
-
-            // Summoned spectral weapons aura (Invocação de Armas).
-            if (gameTime < rpg.getWeaponSummonUntil()) {
-                SkillCasting.tickWeaponSummon(player, rpg, gameTime);
-            }
-
-            // Advanced Arcane auras.
-            if (gameTime < rpg.getFloatingSpheresUntil()) {
-                SkillCasting.tickFloatingSpheres(player, rpg, gameTime);
-            }
-            if (gameTime < rpg.getVoidPresenceUntil()) {
-                SkillCasting.tickVoidPresence(player, rpg, gameTime);
-            }
-
-            // Re-apply attribute modifiers on the tick a dagger buff expires so
-            // the speed/attack-speed surge is removed cleanly.
-            if (gameTime == rpg.getGhostStepsUntil() || gameTime == rpg.getShadowVeilUntil()
-                    || gameTime == rpg.getDaggerDanceUntil()) {
-                RpgAttributeApplier.apply(player, rpg);
-            }
-
-            // Becoming an Advanced Arcanist (Intelligence 50) grants the
-            // purple-and-black Advanced Staff, once.
-            if (!rpg.isAdvancedStaffGranted() && gameTime % 40 == 0
-                    && rpg.getAttribute(RpgAttribute.INTELLIGENCE)
-                    >= SkillTrees.ADVANCED_ARCANE_INTELLIGENCE) {
-                rpg.setAdvancedStaffGranted(true);
-                ItemStack reward = new ItemStack(com.magik.registry.ModItems.ADVANCED_STAFF.get());
-                if (!player.getInventory().add(reward)) {
-                    player.drop(reward, false);
-                }
-                player.displayClientMessage(
-                        net.minecraft.network.chat.Component.translatable(
-                                "message.magik.advanced_staff_granted"), false);
-                player.level().playSound(null, player.blockPosition(),
-                        SoundEvents.TOTEM_USE, SoundSource.PLAYERS, 0.8F, 1.4F);
-                SkillFx.helix((ServerLevel) player.level(), player,
-                        SkillFx.ARCANE_A, SkillFx.ARCANE_B);
-            }
-
-            // Active guard: blocking with any shield projects a green barrier
-            // and drains stamina; when it empties the guard breaks.
-            if (player.isBlocking() && player.getUseItem().getItem() instanceof net.minecraft.world.item.ShieldItem) {
-                if (rpg.consumeStamina(0.4F, gameTime)) {
-                    if (gameTime % 4 == 0) {
-                        SkillFx.guardDome((ServerLevel) player.level(), player);
-                    }
-                } else {
-                    // Guard break: the shield goes on cooldown for 3 seconds.
-                    ItemStack shield = player.getUseItem();
-                    player.stopUsingItem();
-                    player.getCooldowns().addCooldown(shield.getItem(), 60);
-                    player.level().playSound(null, player.blockPosition(),
-                            SoundEvents.SHIELD_BREAK, SoundSource.PLAYERS, 0.8F, 1.0F);
-                }
-            }
-
-            // Unequip armor whose level/attribute requirements are not met.
-            if (gameTime % 40 == 0) {
-                RpgGear.enforceArmorRequirements(player, rpg);
-            }
-
             if (gameTime % VITALS_SYNC_INTERVAL == 0) {
                 MagikNetwork.syncVitals(player, rpg);
             }
         });
-    }
-
-    /** Ticks the Dimensional Rift zones on every server level tick. */
-    @SubscribeEvent
-    public static void onLevelTick(TickEvent.LevelTickEvent event) {
-        if (event.phase == TickEvent.Phase.END && event.level instanceof ServerLevel serverLevel) {
-            SkillCasting.tickRifts(serverLevel);
-        }
     }
 
     /** Restores mana from consumables; clamped to the player's maximum. */

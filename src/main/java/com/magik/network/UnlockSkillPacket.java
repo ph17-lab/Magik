@@ -38,7 +38,7 @@ public class UnlockSkillPacket {
             }
             PlayerRpgProvider.get(player).ifPresent(rpg -> {
                 if (SkillTrees.canUnlock(rpg, skill)) {
-                    rpg.setSkillPoints(rpg.getSkillPoints() - 1);
+                    rpg.setSkillPoints(rpg.getSkillPoints() - skill.getPointCost());
                     rpg.unlockSkill(skill.getId());
                     RpgAttributeApplier.apply(player, rpg); // Passives may add modifiers.
                     player.level().playSound(null, player.blockPosition(),

@@ -41,6 +41,12 @@ public class PlayerRpg {
 
     /** Ids of unlocked skill tree nodes. */
     private final Set<String> unlockedSkills = new HashSet<>();
+    /** Ids of quests the player has completed (unlocks the matching skill for purchase). */
+    private final Set<String> completedQuests = new HashSet<>();
+    /** Progress counters for counting quests (kill 10 mobs, place 100 blocks...). */
+    private final Map<String, Integer> questProgress = new HashMap<>();
+    /** Explorer waypoints: name|x|y|z. */
+    private final java.util.List<Waypoint> waypoints = new java.util.ArrayList<>();
     /** skillId -> game time at which the skill becomes usable again. */
     private final Map<String, Long> cooldowns = new HashMap<>();
     /** Active skills assigned to the HUD hotkeys (null = empty slot). */
@@ -54,6 +60,10 @@ public class PlayerRpg {
 
     /** Special effect applied to the next arrow the player fires. */
     public enum ArrowEffect {NONE, EXPLOSIVE, FROST, ELECTRIC}
+
+    /** A named Explorer waypoint the special compass can point to. */
+    public record Waypoint(String name, int x, int y, int z) {
+    }
 
     private int comboStacks;
     private long comboUntil;
@@ -355,6 +365,45 @@ public class PlayerRpg {
         this.lastCombatTime = gameTime;
     }
 
+    // --- Quests & waypoints ---
+
+    public Set<String> getCompletedQuests() {
+        return completedQuests;
+    }
+
+    public boolean hasCompletedQuest(String questId) {
+        return questId == null || questId.isEmpty() || completedQuests.contains(questId);
+    }
+
+    /** Marks a quest complete. @return true if it was newly completed. */
+    public boolean completeQuest(String questId) {
+        return completedQuests.add(questId);
+    }
+
+    public int getQuestProgress(String questId) {
+        return questProgress.getOrDefault(questId, 0);
+    }
+
+    /** Increments a counting quest. @return the new count. */
+    public int addQuestProgress(String questId, int amount) {
+        int value = getQuestProgress(questId) + amount;
+        questProgress.put(questId, value);
+        return value;
+    }
+
+    public java.util.List<Waypoint> getWaypoints() {
+        return waypoints;
+    }
+
+    public void addWaypoint(Waypoint waypoint) {
+        waypoints.removeIf(w -> w.name().equalsIgnoreCase(waypoint.name()));
+        waypoints.add(waypoint);
+    }
+
+    public void removeWaypoint(String name) {
+        waypoints.removeIf(w -> w.name().equalsIgnoreCase(name));
+    }
+
     public ArrowEffect getNextArrowEffect(long gameTime) {
         return gameTime <= nextArrowUntil ? nextArrowEffect : ArrowEffect.NONE;
     }
@@ -404,6 +453,29 @@ public class PlayerRpg {
         }
         tag.put("Slots", slotsTag);
         tag.putBoolean("AdvStaffGranted", advancedStaffGranted);
+
+        ListTag questsTag = new ListTag();
+        for (String quest : completedQuests) {
+            questsTag.add(StringTag.valueOf(quest));
+        }
+        tag.put("Quests", questsTag);
+
+        CompoundTag progressTag = new CompoundTag();
+        for (Map.Entry<String, Integer> entry : questProgress.entrySet()) {
+            progressTag.putInt(entry.getKey(), entry.getValue());
+        }
+        tag.put("QuestProgress", progressTag);
+
+        ListTag wpTag = new ListTag();
+        for (Waypoint wp : waypoints) {
+            CompoundTag w = new CompoundTag();
+            w.putString("n", wp.name());
+            w.putInt("x", wp.x());
+            w.putInt("y", wp.y());
+            w.putInt("z", wp.z());
+            wpTag.add(w);
+        }
+        tag.put("Waypoints", wpTag);
         return tag;
     }
 
@@ -437,6 +509,24 @@ public class PlayerRpg {
             skillSlots[i] = value.isEmpty() ? null : value;
         }
         advancedStaffGranted = tag.getBoolean("AdvStaffGranted");
+
+        completedQuests.clear();
+        for (Tag element : tag.getList("Quests", Tag.TAG_STRING)) {
+            completedQuests.add(element.getAsString());
+        }
+
+        questProgress.clear();
+        CompoundTag progressTag = tag.getCompound("QuestProgress");
+        for (String key : progressTag.getAllKeys()) {
+            questProgress.put(key, progressTag.getInt(key));
+        }
+
+        waypoints.clear();
+        ListTag wpTag = tag.getList("Waypoints", Tag.TAG_COMPOUND);
+        for (int i = 0; i < wpTag.size(); i++) {
+            CompoundTag w = wpTag.getCompound(i);
+            waypoints.add(new Waypoint(w.getString("n"), w.getInt("x"), w.getInt("y"), w.getInt("z")));
+        }
     }
 
     /** Copies persistent progress from another instance (used on death/clone). */

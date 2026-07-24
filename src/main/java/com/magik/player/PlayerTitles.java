@@ -4,16 +4,8 @@ import com.magik.skills.SkillTrees;
 import net.minecraft.network.chat.Component;
 
 /**
- * The free class system's progression titles. A player has no fixed class:
- * the title is derived from their level and the tree they invested in most.
- *
- * <ul>
- *   <li>Level &lt; 10: Aprendiz</li>
- *   <li>Level &gt;= 80: Lenda</li>
- *   <li>Otherwise, by dominant tree: Espadachim/Pesado -&gt; Guerreiro
- *       (Cavaleiro at 40+), Arcano -&gt; Mago (Arquimago at 40+),
- *       Arqueiro -&gt; Arqueiro Mestre, Defesa -&gt; Guardião.</li>
- * </ul>
+ * Progression titles. There are no classes: a player's title is derived from
+ * their level and the tree they have invested in the most.
  */
 public final class PlayerTitles {
 
@@ -26,10 +18,10 @@ public final class PlayerTitles {
 
     public static String getTitleKey(PlayerRpg rpg) {
         int level = rpg.getLevel();
-        if (level < 10) {
-            return "apprentice";
+        if (level < 5) {
+            return "novice";
         }
-        if (level >= 80) {
+        if (level >= 50) {
             return "legend";
         }
 
@@ -42,18 +34,18 @@ public final class PlayerTitles {
                 dominant = tree;
             }
         }
-
-        boolean veteran = level >= 40;
         if (dominant == null) {
-            return "warrior";
+            return "adventurer";
         }
         return switch (dominant) {
-            case ARCANE -> veteran ? "archmage" : "mage";
-            case ADVANCED_ARCANE -> "advanced_arcanist";
-            case ARCHER -> "master_archer";
-            case DEFENSE -> "guardian";
-            case DAGGER -> veteran ? "shadow_master" : "assassin";
-            case SWORDSMAN, HEAVY -> veteran ? "knight" : "warrior";
+            case WARRIOR -> "warrior";
+            case MINER -> "miner";
+            case FARMER -> "farmer";
+            case LUMBERJACK -> "lumberjack";
+            case BUILDER -> "builder";
+            case FISHER -> "fisher";
+            case EXPLORER -> "explorer";
+            case ARCANE -> "arcanist";
         };
     }
 }

@@ -110,14 +110,14 @@ public class StaffItem extends Item implements RpgGear, GeoItem {
         if (rpg == null) {
             return InteractionResultHolder.pass(stack);
         }
-        float cost = baseManaCost * RpgStats.manaCostMultiplier(rpg);
+        int intelligence = rpg.getAttribute(com.magik.player.RpgAttribute.INTELLIGENCE);
+        float cost = baseManaCost * Math.max(0.6F, 1.0F - 0.005F * intelligence);
         if (!rpg.consumeMana(cost)) {
             serverPlayer.displayClientMessage(Component.translatable("message.magik.no_mana"), true);
             return InteractionResultHolder.fail(stack);
         }
 
-        float damage = baseDamage * RpgStats.magicDamageMultiplier(rpg)
-                * com.magik.skills.SkillCasting.voidBonus(rpg, level.getGameTime());
+        float damage = baseDamage * (1.0F + 0.04F * intelligence);
         MagicBoltEntity bolt = new MagicBoltEntity(level, serverPlayer, damage, variant);
         bolt.shootFromRotation(serverPlayer, serverPlayer.getXRot(), serverPlayer.getYRot(), 0.0F, 2.0F, 0.6F);
         level.addFreshEntity(bolt);

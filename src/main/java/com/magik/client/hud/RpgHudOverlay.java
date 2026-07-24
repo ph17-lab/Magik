@@ -163,17 +163,8 @@ public class RpgHudOverlay implements IGuiOverlay {
         }
     }
 
-    /** Remaining cooldown [0..1] for the sweep overlay. */
+    /** Cooldowns are unused by the passive progression system. */
     private float cooldownFraction(PlayerRpg rpg, String skillId, long gameTime) {
-        Skill skill = SkillTrees.get(skillId);
-        if (skill == null || skill.getCooldownTicks() <= 0) {
-            return 0.0F;
-        }
-        Long readyAt = rpg.getCooldowns().get(skillId);
-        if (readyAt == null || readyAt <= gameTime) {
-            return 0.0F;
-        }
-        float total = skill.getCooldownTicks() * RpgStats.cooldownMultiplier(rpg);
-        return Mth.clamp((readyAt - gameTime) / total, 0.0F, 1.0F);
+        return 0.0F;
     }
 }

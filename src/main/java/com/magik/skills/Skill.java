@@ -6,43 +6,40 @@ import net.minecraft.network.chat.Component;
 import javax.annotation.Nullable;
 
 /**
- * Immutable definition of a skill tree node. Costs and cooldowns can be
- * overridden by server owners through the JSON balance file
- * ({@link SkillBalance}), which is consulted by the getters.
+ * Immutable definition of a progression-tree node. Every skill requires:
+ * a completed {@link #getQuestId() quest}, its prerequisite node, a minimum
+ * level and a number of skill points ({@link #getPointCost()}).
  *
- * <p>Actual effects are executed in {@link SkillCasting} (actives) or read by
- * the relevant game hooks (passives). New skills are added in {@link SkillTrees}.</p>
+ * <p>Effects are read by the relevant gameplay hooks (mining, farming, combat,
+ * ...). New skills are declared in {@link SkillTrees}.</p>
  */
 public final class Skill {
 
-    public enum Type {ACTIVE, PASSIVE}
+    public enum Type {PASSIVE, ACTIVE}
 
     private final String id;
     private final SkillTrees.Tree tree;
     private final Type type;
-    /** Vertical position inside the tree (0 = root). */
     private final int tier;
-    /** Horizontal branch inside the tree (0 = left, 1 = right). */
     private final int branch;
     @Nullable
     private final String prerequisite;
+    @Nullable
+    private final String questId;
     private final int requiredLevel;
-    private final float manaCost;
-    private final float staminaCost;
-    private final int cooldownTicks;
+    private final int pointCost;
 
-    Skill(String id, SkillTrees.Tree tree, Type type, int tier, int branch, @Nullable String prerequisite,
-          int requiredLevel, float manaCost, float staminaCost, int cooldownTicks) {
+    Skill(String id, SkillTrees.Tree tree, Type type, int tier, int branch,
+          @Nullable String prerequisite, @Nullable String questId, int requiredLevel, int pointCost) {
         this.id = id;
         this.tree = tree;
         this.type = type;
         this.tier = tier;
         this.branch = branch;
         this.prerequisite = prerequisite;
+        this.questId = questId;
         this.requiredLevel = requiredLevel;
-        this.manaCost = manaCost;
-        this.staminaCost = staminaCost;
-        this.cooldownTicks = cooldownTicks;
+        this.pointCost = pointCost;
     }
 
     public String getId() {
@@ -70,20 +67,17 @@ public final class Skill {
         return prerequisite;
     }
 
+    @Nullable
+    public String getQuestId() {
+        return questId;
+    }
+
     public int getRequiredLevel() {
         return SkillBalance.requiredLevel(id, requiredLevel);
     }
 
-    public float getManaCost() {
-        return SkillBalance.manaCost(id, manaCost);
-    }
-
-    public float getStaminaCost() {
-        return SkillBalance.staminaCost(id, staminaCost);
-    }
-
-    public int getCooldownTicks() {
-        return SkillBalance.cooldownTicks(id, cooldownTicks);
+    public int getPointCost() {
+        return Math.max(1, pointCost);
     }
 
     public Component getDisplayName() {
