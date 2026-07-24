@@ -39,7 +39,7 @@ public class SpecialCompassItem extends CompassItem {
     public enum Mode {WAYPOINT, BIOME, STRUCTURE}
 
     /** Biomes the biome compass can search, in cycle order. */
-    private static final ResourceKey<Biome>[] BIOMES = keys(Registries.BIOME,
+    public static final ResourceKey<Biome>[] BIOMES = keys(Registries.BIOME,
             "cherry_grove", "desert", "jungle", "badlands", "mangrove_swamp", "mushroom_fields",
             "ice_spikes", "savanna", "meadow", "dark_forest");
 
@@ -162,6 +162,30 @@ public class SpecialCompassItem extends CompassItem {
             case BIOME -> Component.translatable("biome.minecraft." + BIOMES[index(stack) % BIOMES.length].location().getPath());
             case STRUCTURE -> Component.literal(STRUCTURES[index(stack) % STRUCTURES.length].location().getPath());
         };
+    }
+
+    /** Display name of a biome in the searchable list. */
+    public static Component biomeName(int index) {
+        ResourceKey<Biome> key = BIOMES[Math.floorMod(index, BIOMES.length)];
+        return Component.translatable("biome.minecraft." + key.location().getPath());
+    }
+
+    /** Stores a located target on a compass stack (used by the map's biome picker). */
+    public static void setTarget(ItemStack stack, BlockPos pos, int index) {
+        CompoundTag tag = stack.getOrCreateTag();
+        tag.putInt("TX", pos.getX());
+        tag.putInt("TY", pos.getY());
+        tag.putInt("TZ", pos.getZ());
+        tag.putBoolean("TSet", true);
+        tag.putInt("Idx", index);
+    }
+
+    /** Locates a biome by index around the player; null when nothing is close enough. */
+    @Nullable
+    public static BlockPos findBiome(ServerLevel level, BlockPos origin, int index) {
+        ResourceKey<Biome> key = BIOMES[Math.floorMod(index, BIOMES.length)];
+        var result = level.findClosestBiome3d(h -> h.is(key), origin, 6400, 32, 64);
+        return result == null ? null : result.getFirst();
     }
 
     /** Read the located target as a block position, or null if unset. */

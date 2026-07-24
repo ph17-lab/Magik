@@ -421,5 +421,13 @@
   "screen.magik.add_waypoint_here": "+ Waypoint here",
   "key.magik.open_map": "Open Map",
   "key.magik.add_waypoint": "Add Waypoint",
-  "key.magik.minimap_zoom": "Minimap Zoom"
+  "key.magik.minimap_zoom": "Minimap Zoom",
+  "screen.magik.panel_biomes": "Biomes",
+  "screen.magik.panel_waypoints": "Waypoints",
+  "screen.magik.pick_biome": "Pick a biome to track",
+  "screen.magik.legend_players": "Players",
+  "screen.magik.legend_villagers": "Villagers",
+  "screen.magik.legend_animals": "Animals",
+  "screen.magik.legend_hostiles": "Hostiles",
+  "message.magik.need_biome_compass": "Carry a Biome Compass to track it!"
 }

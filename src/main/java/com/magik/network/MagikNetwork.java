@@ -81,6 +81,12 @@ public final class MagikNetwork {
                 .decoder(WaypointPacket::decode)
                 .consumerMainThread(WaypointPacket::handle)
                 .add();
+
+        CHANNEL.messageBuilder(LocateBiomePacket.class, id++, NetworkDirection.PLAY_TO_SERVER)
+                .encoder(LocateBiomePacket::encode)
+                .decoder(LocateBiomePacket::decode)
+                .consumerMainThread(LocateBiomePacket::handle)
+                .add();
     }
 
     /** Sends the complete RPG state to the owning client. */

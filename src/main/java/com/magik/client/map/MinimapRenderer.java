@@ -78,6 +78,7 @@ public final class MinimapRenderer implements IGuiOverlay {
         graphics.enableScissor(x, y, x + SCREEN, y + SCREEN);
         graphics.blit(textureId, x, y, SCREEN, SCREEN, 0.0F, 0.0F, SIZE, SIZE, SIZE, SIZE);
 
+        renderMobs(graphics, player, x, y);
         renderWaypoints(graphics, player, x, y);
         renderPlayerArrow(graphics, player, x + SCREEN / 2, y + SCREEN / 2);
         graphics.disableScissor();
@@ -103,6 +104,16 @@ public final class MinimapRenderer implements IGuiOverlay {
         graphics.fill(-3, 1, 3, 3, 0xFFFFFFFF);
         graphics.fill(-2, -5, 2, -3, 0xFFE33B3B);
         graphics.pose().popPose();
+    }
+
+    /** Living entities around the player, colored by kind. */
+    private void renderMobs(GuiGraphics graphics, LocalPlayer player, int mapX, int mapY) {
+        for (MobRadar.Blip blip : MobRadar.scan(player.getX(), player.getZ(), radius())) {
+            int px = mapX + (int) (blip.u() * SCREEN);
+            int py = mapY + (int) (blip.v() * SCREEN);
+            graphics.fill(px - 2, py - 2, px + 2, py + 2, 0xB0000000);
+            graphics.fill(px - 1, py - 1, px + 1, py + 1, blip.color());
+        }
     }
 
     private void renderWaypoints(GuiGraphics graphics, LocalPlayer player, int mapX, int mapY) {

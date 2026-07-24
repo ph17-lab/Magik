@@ -421,5 +421,13 @@
   "screen.magik.add_waypoint_here": "+ Waypoint aqui",
   "key.magik.open_map": "Abrir Mapa",
   "key.magik.add_waypoint": "Adicionar Waypoint",
-  "key.magik.minimap_zoom": "Zoom do Minimapa"
+  "key.magik.minimap_zoom": "Zoom do Minimapa",
+  "screen.magik.panel_biomes": "Biomas",
+  "screen.magik.panel_waypoints": "Waypoints",
+  "screen.magik.pick_biome": "Escolha um bioma para rastrear",
+  "screen.magik.legend_players": "Jogadores",
+  "screen.magik.legend_villagers": "Aldeões",
+  "screen.magik.legend_animals": "Animais",
+  "screen.magik.legend_hostiles": "Hostis",
+  "message.magik.need_biome_compass": "Tenha uma Bússola de Biomas para rastrear!"
 }
